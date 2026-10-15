@@ -2,13 +2,16 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Dict
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.core.config import get_settings
 from app.core.db import db
+from app.core.exceptions import AppException
+from app.routers import donors, hospitals, recipients
 
 # Configure logging
 logging.basicConfig(
@@ -62,7 +65,10 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Organ/Blood Donor–Recipient Matching Network API",
-        description="Graph-based matching network backend connecting donors, recipients, and hospitals.",
+        description=(
+            "Graph-based matching network backend connecting donors, recipients, and hospitals. "
+            "[Development Mode: Unauthenticated CRUD operations for Phase 3]"
+        ),
         version="1.0.0",
         docs_url="/docs",
         openapi_url="/openapi.json",
@@ -77,6 +83,81 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # --------------------------------------------------------------------------
+    # Global Exception Handlers (Standard Error Contract)
+    # --------------------------------------------------------------------------
+    @app.exception_handler(AppException)
+    async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": {
+                    "code": exc.code,
+                    "message": exc.message,
+                    "details": exc.details,
+                }
+            },
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+        errors = exc.errors()
+        # Format field error descriptions cleanly
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Request validation failed.",
+                    "details": errors,
+                }
+            },
+        )
+
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+        code = "HTTP_ERROR"
+        if exc.status_code == 404:
+            code = "RESOURCE_NOT_FOUND"
+        elif exc.status_code == 503:
+            code = "SERVICE_UNAVAILABLE"
+        elif exc.status_code == 400:
+            code = "BAD_REQUEST"
+        elif exc.status_code == 409:
+            code = "CONFLICT_ERROR"
+
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": {
+                    "code": code,
+                    "message": str(exc.detail),
+                    "details": None,
+                }
+            },
+        )
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.error("Unhandled server exception on %s %s: %s", request.method, request.url.path, str(exc), exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "error": {
+                    "code": "INTERNAL_SERVER_ERROR",
+                    "message": "An unexpected server error occurred.",
+                    "details": None,
+                }
+            },
+        )
+
+    # --------------------------------------------------------------------------
+    # Include CRUD Routers under API_PREFIX (/api/v1)
+    # --------------------------------------------------------------------------
+    app.include_router(donors.router, prefix=settings.API_PREFIX)
+    app.include_router(recipients.router, prefix=settings.API_PREFIX)
+    app.include_router(hospitals.router, prefix=settings.API_PREFIX)
 
     # Register root endpoint
     @app.get(

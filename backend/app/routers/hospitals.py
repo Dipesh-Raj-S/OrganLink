@@ -1,0 +1,86 @@
+from fastapi import APIRouter, Depends, Query, status
+from neo4j import AsyncDriver
+
+from app.core.db import get_db_driver
+from app.schemas.common import PaginatedResponse
+from app.schemas.hospital import HospitalCreate, HospitalResponse, HospitalUpdate
+from app.services.hospital_service import HospitalService
+
+router = APIRouter(prefix="/hospitals", tags=["Hospitals"])
+
+
+def get_hospital_service(driver: AsyncDriver = Depends(get_db_driver)) -> HospitalService:
+    return HospitalService(driver)
+
+
+@router.post(
+    "",
+    response_model=HospitalResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create hospital",
+    description="Registers a new hospital with geographical coordinates.",
+)
+async def create_hospital(
+    payload: HospitalCreate,
+    service: HospitalService = Depends(get_hospital_service),
+) -> HospitalResponse:
+    return await service.create_hospital(payload)
+
+
+@router.get(
+    "",
+    response_model=PaginatedResponse[HospitalResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List hospitals",
+    description="Lists hospitals with pagination and optional search by name.",
+)
+async def list_hospitals(
+    name: str = Query(default=None, description="Filter by name substring (case-insensitive)"),
+    page: int = Query(default=1, ge=1, description="Page number (1-indexed)"),
+    page_size: int = Query(default=20, ge=1, le=100, description="Items per page (max 100)"),
+    service: HospitalService = Depends(get_hospital_service),
+) -> PaginatedResponse[HospitalResponse]:
+    result = await service.list_hospitals(name=name, page=page, page_size=page_size)
+    return PaginatedResponse[HospitalResponse](**result)
+
+
+@router.get(
+    "/{hospital_id}",
+    response_model=HospitalResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get hospital by ID",
+    description="Retrieves a specific hospital by its unique ID.",
+)
+async def get_hospital(
+    hospital_id: str,
+    service: HospitalService = Depends(get_hospital_service),
+) -> HospitalResponse:
+    return await service.get_hospital(hospital_id)
+
+
+@router.patch(
+    "/{hospital_id}",
+    response_model=HospitalResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Update hospital",
+    description="Partially updates hospital details without breaking relationships.",
+)
+async def update_hospital(
+    hospital_id: str,
+    payload: HospitalUpdate,
+    service: HospitalService = Depends(get_hospital_service),
+) -> HospitalResponse:
+    return await service.update_hospital(hospital_id, payload)
+
+
+@router.delete(
+    "/{hospital_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete hospital",
+    description="Deletes a hospital if it has no registered recipients, users, or allocation history.",
+)
+async def delete_hospital(
+    hospital_id: str,
+    service: HospitalService = Depends(get_hospital_service),
+) -> None:
+    await service.delete_hospital(hospital_id)

@@ -76,8 +76,9 @@ async def test_health_check_database_down_mocked(test_app):
             resp_root = await client.get("/health")
             assert resp_root.status_code == 503
             data = resp_root.json()
-            assert "detail" in data
-            assert data["detail"] == "Database unavailable. Service is unhealthy."
+            assert "error" in data
+            assert data["error"]["code"] == "SERVICE_UNAVAILABLE"
+            assert data["error"]["message"] == "Database unavailable. Service is unhealthy."
             # Verify sensitive details or credentials are not exposed
             assert "localhost" not in str(data)
             assert "testpassword123" not in str(data)
