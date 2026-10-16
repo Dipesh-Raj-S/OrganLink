@@ -150,12 +150,47 @@ pytest -v
 
 ---
 
+### Phase 5: Authentication, RBAC, and Transactional Allocation
+- **PBKDF2-HMAC-SHA256 Authentication**: Secure credential verification against stored password hashes in Neo4j (`POST /api/v1/auth/login`).
+- **Signed JWT Bearer Tokens**: Configurable short-lived access tokens with strict expiration, issuer, audience, and algorithm verification.
+- **Role-Based Access Control (RBAC)**: Endpoint protection enforcing least-privilege policies across `ADMIN`, `COORDINATOR`, `DOCTOR`, and `AUDITOR`.
+- **Atomic Transactional Allocation**: Concurrency-safe organ allocation in Neo4j 5 Community Edition (`POST /api/v1/matches/requests/{match_id}/allocate`) preventing double allocations via deterministic write lock acquisition and conditional status transitions.
+
+---
+
 ## 7. API Endpoints
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/` | Application info and documentation links |
-| `GET` | `/health` | Root health check (verifies Neo4j connectivity) |
-| `GET` | `/api/v1/health` | Prefixed health check |
-| `GET` | `/docs` | Interactive Swagger UI |
-| `GET` | `/openapi.json` | OpenAPI v3 Specification schema |
+| Method | Endpoint | Auth / Role | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Public | Application info and documentation links |
+| `GET` | `/health` | Public | Root health check (verifies Neo4j connectivity) |
+| `GET` | `/api/v1/health` | Public | Prefixed health check |
+| `POST` | `/api/v1/auth/login` | Public | Authenticate user credentials & receive JWT token |
+| `POST` | `/api/v1/auth/token` | Public | OAuth2 password form login (Swagger UI integration) |
+| `GET` | `/api/v1/auth/me` | Authenticated | Retrieve authenticated user profile & role |
+| `GET` | `/api/v1/donors` | Authenticated | List donors (paginated, filtered) |
+| `POST` | `/api/v1/donors` | `ADMIN`, `COORDINATOR` | Register a new donor |
+| `GET` | `/api/v1/donors/{id}` | Authenticated | Retrieve donor profile |
+| `PATCH` | `/api/v1/donors/{id}` | `ADMIN`, `COORDINATOR` | Partially update donor profile |
+| `DELETE` | `/api/v1/donors/{id}` | `ADMIN` | Delete donor with dependency checks |
+| `GET` | `/api/v1/recipients` | Authenticated | List waiting recipients (paginated) |
+| `POST` | `/api/v1/recipients` | `ADMIN`, `COORDINATOR` | Register a new recipient |
+| `GET` | `/api/v1/recipients/{id}` | Authenticated | Retrieve recipient profile |
+| `PATCH` | `/api/v1/recipients/{id}` | `ADMIN`, `COORDINATOR` | Update recipient profile |
+| `PATCH` | `/api/v1/recipients/{id}/urgency` | `ADMIN`, `COORDINATOR` | Update recipient clinical urgency score |
+| `DELETE` | `/api/v1/recipients/{id}` | `ADMIN` | Delete recipient with dependency checks |
+| `GET` | `/api/v1/hospitals` | Authenticated | List hospitals |
+| `POST` | `/api/v1/hospitals` | `ADMIN`, `COORDINATOR` | Register hospital |
+| `GET` | `/api/v1/hospitals/{id}` | Authenticated | Get hospital by ID |
+| `PATCH` | `/api/v1/hospitals/{id}` | `ADMIN`, `COORDINATOR` | Update hospital details |
+| `DELETE` | `/api/v1/hospitals/{id}` | `ADMIN` | Delete hospital |
+| `GET` | `/api/v1/matches/recipients/{id}/candidates` | Authenticated | Discover & rank candidate donors |
+| `POST` | `/api/v1/matches/requests` | `ADMIN`, `COORDINATOR` | Create formal match request |
+| `GET` | `/api/v1/matches/requests/{id}` | Authenticated | Retrieve match request details |
+| `GET` | `/api/v1/matches/requests` | Authenticated | List match requests |
+| `POST` | `/api/v1/matches/requests/{id}/allocate` | `ADMIN`, `COORDINATOR` | Atomic match allocation commit |
+| `GET` | `/api/v1/allocations/{id}` | Authenticated | Get allocation record |
+| `GET` | `/api/v1/allocations` | Authenticated | List allocation history |
+| `GET` | `/docs` | Public | Interactive Swagger UI |
+| `GET` | `/openapi.json` | Public | OpenAPI specification schema |
+

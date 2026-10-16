@@ -31,3 +31,14 @@ class ConflictException(AppException):
 class BadRequestException(AppException):
     def __init__(self, message: str, code: str = "BAD_REQUEST", details: Optional[Any] = None) -> None:
         super().__init__(status_code=400, code=code, message=message, details=details)
+
+
+class UnauthorizedException(AppException):
+    def __init__(self, message: str = "Authentication required", code: str = "UNAUTHORIZED", details: Optional[Any] = None) -> None:
+        super().__init__(status_code=401, code=code, message=message, details=details)
+
+
+class ForbiddenException(AppException):
+    def __init__(self, message: str = "Access forbidden", code: str = "FORBIDDEN", details: Optional[Any] = None) -> None:
+        super().__init__(status_code=403, code=code, message=message, details=details)
+

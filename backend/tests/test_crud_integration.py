@@ -23,6 +23,15 @@ async def live_app():
         await session.run("MATCH (r:Recipient) WHERE r.recipient_id STARTS WITH 'REC-INTEG' DETACH DELETE r")
 
     app = create_app()
+    from app.core.dependencies import get_current_user
+    from app.schemas.auth import UserResponse
+    from app.schemas.enums import UserRoleEnum
+    app.dependency_overrides[get_current_user] = lambda: UserResponse(
+        user_id="USR-001",
+        username="admin_sys",
+        role=UserRoleEnum.ADMIN,
+        is_active=True,
+    )
     yield app
 
     # Clean up after tests

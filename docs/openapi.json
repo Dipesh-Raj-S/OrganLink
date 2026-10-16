@@ -1,0 +1,2947 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Organ/Blood Donor\u2013Recipient Matching Network API",
+    "description": "Graph-based matching network backend connecting donors, recipients, and hospitals. [Development Mode: Unauthenticated CRUD operations for Phase 3]",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User login with credentials",
+        "description": "Authenticates a registered system user using their username and password. Verifies credentials against PBKDF2-HMAC-SHA256 salted password hashes and issues a signed JWT bearer token. Accepts JSON payload or form.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "OAuth2 compatible token login",
+        "description": "OAuth2-compatible password form endpoint for Swagger UI Authorization.",
+        "operationId": "login_oauth2_form_api_v1_auth_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_oauth2_form_api_v1_auth_token_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Current authenticated user profile",
+        "description": "Retrieves the authenticated user's profile and active role from the database. Password hashes are never exposed.",
+        "operationId": "get_me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/donors": {
+      "post": {
+        "tags": [
+          "Donors"
+        ],
+        "summary": "Create donor",
+        "description": "Registers a new organ/blood donor with location coordinates and viability window. Requires ADMIN or COORDINATOR role.",
+        "operationId": "create_donor_api_v1_donors_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DonorCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DonorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Donors"
+        ],
+        "summary": "List donors",
+        "description": "Lists donors with pagination and filters for status, organ_type, and blood_type. Accessible by all authenticated roles.",
+        "operationId": "list_donors_api_v1_donors_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DonorStatusEnum",
+              "description": "Filter by donor status"
+            },
+            "description": "Filter by donor status"
+          },
+          {
+            "name": "organ_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrganTypeEnum",
+              "description": "Filter by organ type"
+            },
+            "description": "Filter by organ type"
+          },
+          {
+            "name": "blood_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BloodTypeEnum",
+              "description": "Filter by blood type"
+            },
+            "description": "Filter by blood type"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (max 100)",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Items per page (max 100)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_DonorResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/donors/{donor_id}": {
+      "get": {
+        "tags": [
+          "Donors"
+        ],
+        "summary": "Get donor by ID",
+        "description": "Retrieves a specific donor profile by unique donor_id. Accessible by all authenticated roles.",
+        "operationId": "get_donor_api_v1_donors__donor_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "donor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Donor Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DonorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Donors"
+        ],
+        "summary": "Update donor",
+        "description": "Partially updates donor details and increments version automatically. Requires ADMIN or COORDINATOR role.",
+        "operationId": "update_donor_api_v1_donors__donor_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "donor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Donor Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DonorUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DonorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Donors"
+        ],
+        "summary": "Delete donor",
+        "description": "Deletes a donor if no allocation or match proposal history exists. Requires ADMIN role.",
+        "operationId": "delete_donor_api_v1_donors__donor_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "donor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Donor Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recipients": {
+      "post": {
+        "tags": [
+          "Recipients"
+        ],
+        "summary": "Create recipient",
+        "description": "Registers a new recipient on the waiting list and creates hospital and blood type relationships. Requires ADMIN or COORDINATOR role.",
+        "operationId": "create_recipient_api_v1_recipients_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipientCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Recipients"
+        ],
+        "summary": "List recipients",
+        "description": "Lists recipients with pagination and filters for organ, blood type, hospital, and status. Accessible by all authenticated roles.",
+        "operationId": "list_recipients_api_v1_recipients_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organ_needed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrganTypeEnum",
+              "description": "Filter by needed organ"
+            },
+            "description": "Filter by needed organ"
+          },
+          {
+            "name": "blood_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BloodTypeEnum",
+              "description": "Filter by blood type"
+            },
+            "description": "Filter by blood type"
+          },
+          {
+            "name": "hospital_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by registered hospital ID",
+              "title": "Hospital Id"
+            },
+            "description": "Filter by registered hospital ID"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/RecipientStatusEnum",
+              "description": "Filter by status"
+            },
+            "description": "Filter by status"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (max 100)",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Items per page (max 100)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_RecipientResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recipients/{recipient_id}": {
+      "get": {
+        "tags": [
+          "Recipients"
+        ],
+        "summary": "Get recipient by ID",
+        "description": "Retrieves a specific recipient waitlist profile by unique recipient_id. Accessible by all authenticated roles.",
+        "operationId": "get_recipient_api_v1_recipients__recipient_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recipient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recipient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Recipients"
+        ],
+        "summary": "Update recipient",
+        "description": "Partially updates recipient details without allowing direct allocation. Requires ADMIN or COORDINATOR role.",
+        "operationId": "update_recipient_api_v1_recipients__recipient_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recipient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recipient Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipientUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Recipients"
+        ],
+        "summary": "Delete recipient",
+        "description": "Deletes a recipient if no allocation or match history exists. Requires ADMIN role.",
+        "operationId": "delete_recipient_api_v1_recipients__recipient_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recipient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recipient Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recipients/{recipient_id}/urgency": {
+      "patch": {
+        "tags": [
+          "Recipients"
+        ],
+        "summary": "Update recipient urgency",
+        "description": "Updates the recipient's clinical urgency score (1-10) via dedicated endpoint. Requires ADMIN or COORDINATOR role.",
+        "operationId": "update_recipient_urgency_api_v1_recipients__recipient_id__urgency_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recipient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recipient Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipientUrgencyUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospitals": {
+      "post": {
+        "tags": [
+          "Hospitals"
+        ],
+        "summary": "Create hospital",
+        "description": "Registers a new hospital with geographical coordinates. Requires ADMIN or COORDINATOR role.",
+        "operationId": "create_hospital_api_v1_hospitals_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospitalCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HospitalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Hospitals"
+        ],
+        "summary": "List hospitals",
+        "description": "Lists hospitals with pagination and optional search by name. Accessible by all authenticated roles.",
+        "operationId": "list_hospitals_api_v1_hospitals_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Filter by name substring (case-insensitive)",
+              "title": "Name"
+            },
+            "description": "Filter by name substring (case-insensitive)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (max 100)",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Items per page (max 100)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_HospitalResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hospitals/{hospital_id}": {
+      "get": {
+        "tags": [
+          "Hospitals"
+        ],
+        "summary": "Get hospital by ID",
+        "description": "Retrieves a specific hospital by its unique ID. Accessible by all authenticated roles.",
+        "operationId": "get_hospital_api_v1_hospitals__hospital_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "hospital_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Hospital Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HospitalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Hospitals"
+        ],
+        "summary": "Update hospital",
+        "description": "Partially updates hospital details without breaking relationships. Requires ADMIN or COORDINATOR role.",
+        "operationId": "update_hospital_api_v1_hospitals__hospital_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "hospital_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Hospital Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospitalUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HospitalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Hospitals"
+        ],
+        "summary": "Delete hospital",
+        "description": "Deletes a hospital if it has no registered recipients, users, or allocation history. Requires ADMIN role.",
+        "operationId": "delete_hospital_api_v1_hospitals__hospital_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "hospital_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Hospital Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/recipients/{recipient_id}/candidates": {
+      "get": {
+        "tags": [
+          "Matching Engine"
+        ],
+        "summary": "Find candidate donors for recipient",
+        "description": "Discovers eligible organ/blood donors using Neo4j graph traversal across CAN_DONATE_TO edges, ranks them with deterministic multi-factor scoring (blood, urgency, proximity), and returns an explained, paginated candidate list. Accessible by all authenticated roles.",
+        "operationId": "get_candidate_donors_api_v1_matches_recipients__recipient_id__candidates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recipient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recipient Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (max 100)",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Items per page (max 100)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/requests": {
+      "post": {
+        "tags": [
+          "Matching Engine"
+        ],
+        "summary": "Create match request",
+        "description": "Initiates a formal match request linking a candidate donor, waiting recipient, and hospital. Validates eligibility and records the computed match score. Requires ADMIN or COORDINATOR role.",
+        "operationId": "create_match_request_api_v1_matches_requests_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchRequestCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Matching Engine"
+        ],
+        "summary": "List match requests",
+        "description": "Lists match requests with pagination and optional status/recipient filters. Accessible by all authenticated roles.",
+        "operationId": "list_match_requests_api_v1_matches_requests_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MatchRequestStatusEnum"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by request status",
+              "title": "Status"
+            },
+            "description": "Filter by request status"
+          },
+          {
+            "name": "recipient_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by recipient ID",
+              "title": "Recipient Id"
+            },
+            "description": "Filter by recipient ID"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (max 100)",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Items per page (max 100)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_MatchRequestResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/requests/{match_id}": {
+      "get": {
+        "tags": [
+          "Matching Engine"
+        ],
+        "summary": "Get match request by ID",
+        "description": "Retrieves a match request record and its linked entities. Accessible by all authenticated roles.",
+        "operationId": "get_match_request_api_v1_matches_requests__match_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/requests/{match_id}/allocate": {
+      "post": {
+        "tags": [
+          "Allocations"
+        ],
+        "summary": "Confirm match allocation (Atomic Transaction)",
+        "description": "Executes atomic, concurrency-safe organ allocation for a proposed match request. Requires COORDINATOR or ADMIN role. Verifies donor availability, recipient waiting status, organ type match, and blood compatibility inside a locked Neo4j transaction. Updates Donor to 'Allocated', Recipient to 'Allocated', MatchRequest to 'Confirmed', and creates the Allocation node with (:Donor)-[:ALLOCATED_IN]->(:Allocation), (:Allocation)-[:TO_RECIPIENT]->(:Recipient), and (:Allocation)-[:CONFIRMED_BY]->(:Hospital).",
+        "operationId": "allocate_match_api_v1_matches_requests__match_id__allocate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AllocationCreate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/allocations/{allocation_id}": {
+      "get": {
+        "tags": [
+          "Allocations"
+        ],
+        "summary": "Get allocation record by ID",
+        "description": "Retrieves an allocation record by its unique identifier. Accessible by all authenticated roles.",
+        "operationId": "get_allocation_api_v1_allocations__allocation_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Allocation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/allocations": {
+      "get": {
+        "tags": [
+          "Allocations"
+        ],
+        "summary": "List allocation history",
+        "description": "Lists allocation history with pagination and optional filters. Accessible by all authenticated roles.",
+        "operationId": "list_allocations_api_v1_allocations_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recipient_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by recipient ID",
+              "title": "Recipient Id"
+            },
+            "description": "Filter by recipient ID"
+          },
+          {
+            "name": "donor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by donor ID",
+              "title": "Donor Id"
+            },
+            "description": "Filter by donor ID"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page (max 100)",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Items per page (max 100)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AllocationResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Service information and documentation link",
+        "operationId": "get_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Database & service connectivity health check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "System is fully healthy and Neo4j is connected.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Neo4j is disconnected or unreachable."
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Prefixed database & service connectivity health check",
+        "operationId": "prefixed_health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "System is fully healthy and Neo4j is connected.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Neo4j is disconnected or unreachable."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AllocationCreate": {
+        "properties": {
+          "donor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Donor Id",
+            "description": "Optional explicit donor ID override if not using the donor linked to the match request"
+          }
+        },
+        "type": "object",
+        "title": "AllocationCreate"
+      },
+      "AllocationResponse": {
+        "properties": {
+          "allocation_id": {
+            "type": "string",
+            "title": "Allocation Id",
+            "description": "Unique allocation identifier (e.g. ALC-001 or ALC-UUID)"
+          },
+          "match_id": {
+            "type": "string",
+            "title": "Match Id",
+            "description": "Referenced MatchRequest ID"
+          },
+          "donor_id": {
+            "type": "string",
+            "title": "Donor Id",
+            "description": "Allocated Donor ID"
+          },
+          "recipient_id": {
+            "type": "string",
+            "title": "Recipient Id",
+            "description": "Allocated Recipient ID"
+          },
+          "hospital_id": {
+            "type": "string",
+            "title": "Hospital Id",
+            "description": "Hospital where allocation is confirmed"
+          },
+          "allocated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allocated By",
+            "description": "User ID of coordinator/admin who executed the allocation"
+          },
+          "confirmed_at": {
+            "type": "string",
+            "title": "Confirmed At",
+            "description": "ISO UTC timestamp when allocation was committed"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AllocationStatusEnum",
+            "description": "Allocation record status",
+            "default": "Confirmed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "allocation_id",
+          "match_id",
+          "donor_id",
+          "recipient_id",
+          "hospital_id",
+          "confirmed_at"
+        ],
+        "title": "AllocationResponse"
+      },
+      "AllocationStatusEnum": {
+        "type": "string",
+        "enum": [
+          "Confirmed",
+          "Cancelled"
+        ],
+        "title": "AllocationStatusEnum"
+      },
+      "BloodTypeEnum": {
+        "type": "string",
+        "enum": [
+          "O-",
+          "O+",
+          "A-",
+          "A+",
+          "B-",
+          "B+",
+          "AB-",
+          "AB+"
+        ],
+        "title": "BloodTypeEnum"
+      },
+      "Body_login_oauth2_form_api_v1_auth_token_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^password$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "format": "password",
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_oauth2_form_api_v1_auth_token_post"
+      },
+      "CandidateDonorResponse": {
+        "properties": {
+          "donor_id": {
+            "type": "string",
+            "title": "Donor Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blood_type": {
+            "$ref": "#/components/schemas/BloodTypeEnum"
+          },
+          "organ_type": {
+            "$ref": "#/components/schemas/OrganTypeEnum"
+          },
+          "donor_location": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Donor Location"
+          },
+          "expiry_window_hours": {
+            "type": "integer",
+            "title": "Expiry Window Hours"
+          },
+          "score": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "description": "Overall matching rank score (0.0 - 100.0)"
+          },
+          "eligible": {
+            "type": "boolean",
+            "title": "Eligible",
+            "description": "Passed all gating criteria",
+            "default": true
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/MatchExplanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "donor_id",
+          "name",
+          "blood_type",
+          "organ_type",
+          "donor_location",
+          "expiry_window_hours",
+          "score",
+          "explanation"
+        ],
+        "title": "CandidateDonorResponse"
+      },
+      "CandidateListResponse": {
+        "properties": {
+          "recipient_id": {
+            "type": "string",
+            "title": "Recipient Id"
+          },
+          "recipient_name": {
+            "type": "string",
+            "title": "Recipient Name"
+          },
+          "organ_needed": {
+            "$ref": "#/components/schemas/OrganTypeEnum"
+          },
+          "recipient_blood_type": {
+            "$ref": "#/components/schemas/BloodTypeEnum"
+          },
+          "urgency_score": {
+            "type": "integer",
+            "title": "Urgency Score"
+          },
+          "hospital_id": {
+            "type": "string",
+            "title": "Hospital Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateDonorResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recipient_id",
+          "recipient_name",
+          "organ_needed",
+          "recipient_blood_type",
+          "urgency_score",
+          "hospital_id",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "CandidateListResponse"
+      },
+      "DonorCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Full name or identifier label for donor"
+          },
+          "blood_type": {
+            "$ref": "#/components/schemas/BloodTypeEnum",
+            "description": "ABO/Rh blood group"
+          },
+          "organ_type": {
+            "$ref": "#/components/schemas/OrganTypeEnum",
+            "description": "Organ or blood product available"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema",
+            "description": "Geographic coordinates"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DonorStatusEnum",
+            "description": "Current availability status",
+            "default": "Available"
+          },
+          "expiry_window_hours": {
+            "type": "integer",
+            "maximum": 8760.0,
+            "minimum": 1.0,
+            "title": "Expiry Window Hours",
+            "description": "Viability window in hours",
+            "default": 24
+          },
+          "donor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Donor Id",
+            "description": "Optional custom identifier (e.g. DNR-001). Generated as UUID if omitted."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "blood_type",
+          "organ_type",
+          "location"
+        ],
+        "title": "DonorCreate"
+      },
+      "DonorResponse": {
+        "properties": {
+          "donor_id": {
+            "type": "string",
+            "title": "Donor Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blood_type": {
+            "$ref": "#/components/schemas/BloodTypeEnum"
+          },
+          "organ_type": {
+            "$ref": "#/components/schemas/OrganTypeEnum"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DonorStatusEnum"
+          },
+          "registered_at": {
+            "type": "string",
+            "title": "Registered At",
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "expiry_window_hours": {
+            "type": "integer",
+            "title": "Expiry Window Hours"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Optimistic concurrency control version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "donor_id",
+          "name",
+          "blood_type",
+          "organ_type",
+          "location",
+          "status",
+          "registered_at",
+          "expiry_window_hours",
+          "version"
+        ],
+        "title": "DonorResponse"
+      },
+      "DonorStatusEnum": {
+        "type": "string",
+        "enum": [
+          "Available",
+          "Reserved",
+          "Allocated",
+          "Expired"
+        ],
+        "title": "DonorStatusEnum"
+      },
+      "DonorUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "blood_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BloodTypeEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "organ_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrganTypeEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocationSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DonorStatusEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiry_window_hours": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 8760.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Window Hours"
+          }
+        },
+        "type": "object",
+        "title": "DonorUpdate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "database": {
+            "type": "string",
+            "title": "Database"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "database"
+        ],
+        "title": "HealthResponse",
+        "description": "Schema for health response."
+      },
+      "HospitalCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Hospital or medical center name"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema",
+            "description": "Geographic coordinates"
+          },
+          "hospital_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hospital Id",
+            "description": "Optional custom identifier (e.g. HOSP-001). Generated as UUID if omitted."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "location"
+        ],
+        "title": "HospitalCreate"
+      },
+      "HospitalResponse": {
+        "properties": {
+          "hospital_id": {
+            "type": "string",
+            "title": "Hospital Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hospital_id",
+          "name",
+          "location"
+        ],
+        "title": "HospitalResponse"
+      },
+      "HospitalUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocationSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "HospitalUpdate"
+      },
+      "LocationSchema": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "description": "Latitude in range [-90.0, 90.0]"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "description": "Longitude in range [-180.0, 180.0]"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "title": "LocationSchema"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Username",
+            "description": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Password",
+            "description": "User password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "MatchExplanation": {
+        "properties": {
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "Human-readable synthesis of eligibility and scoring rationale"
+          },
+          "factors": {
+            "$ref": "#/components/schemas/ScoreFactorBreakdown",
+            "description": "Detailed factor breakdown"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "description": "Non-clinical demonstration safety disclaimer",
+            "default": "Research/demonstration engine only. ABO compatibility and proximity do not substitute for clinical HLA crossmatching."
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "factors"
+        ],
+        "title": "MatchExplanation"
+      },
+      "MatchRequestCreate": {
+        "properties": {
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id",
+            "description": "Optional custom identifier (e.g., MTR-001). Generated as UUID if omitted."
+          },
+          "donor_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Donor Id",
+            "description": "ID of proposed candidate donor"
+          },
+          "recipient_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Recipient Id",
+            "description": "ID of waiting recipient"
+          },
+          "hospital_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hospital Id",
+            "description": "Optional hospital ID. If omitted, defaults to recipient's registered hospital."
+          }
+        },
+        "type": "object",
+        "required": [
+          "donor_id",
+          "recipient_id"
+        ],
+        "title": "MatchRequestCreate"
+      },
+      "MatchRequestResponse": {
+        "properties": {
+          "match_id": {
+            "type": "string",
+            "title": "Match Id"
+          },
+          "match_score": {
+            "type": "number",
+            "title": "Match Score"
+          },
+          "requested_at": {
+            "type": "string",
+            "title": "Requested At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MatchRequestStatusEnum"
+          },
+          "donor_id": {
+            "type": "string",
+            "title": "Donor Id"
+          },
+          "recipient_id": {
+            "type": "string",
+            "title": "Recipient Id"
+          },
+          "hospital_id": {
+            "type": "string",
+            "title": "Hospital Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "match_score",
+          "requested_at",
+          "status",
+          "donor_id",
+          "recipient_id",
+          "hospital_id"
+        ],
+        "title": "MatchRequestResponse"
+      },
+      "MatchRequestStatusEnum": {
+        "type": "string",
+        "enum": [
+          "Pending",
+          "Confirmed",
+          "Rejected",
+          "Cancelled"
+        ],
+        "title": "MatchRequestStatusEnum"
+      },
+      "OrganTypeEnum": {
+        "type": "string",
+        "enum": [
+          "Kidney",
+          "Liver",
+          "Heart",
+          "Lung",
+          "Pancreas",
+          "Blood"
+        ],
+        "title": "OrganTypeEnum"
+      },
+      "PaginatedResponse_AllocationResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AllocationResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items for the requested page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count of items matching the query"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "PaginatedResponse[AllocationResponse]"
+      },
+      "PaginatedResponse_DonorResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DonorResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items for the requested page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count of items matching the query"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "PaginatedResponse[DonorResponse]"
+      },
+      "PaginatedResponse_HospitalResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HospitalResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items for the requested page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count of items matching the query"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "PaginatedResponse[HospitalResponse]"
+      },
+      "PaginatedResponse_MatchRequestResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchRequestResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items for the requested page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count of items matching the query"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "PaginatedResponse[MatchRequestResponse]"
+      },
+      "PaginatedResponse_RecipientResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecipientResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items for the requested page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count of items matching the query"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "PaginatedResponse[RecipientResponse]"
+      },
+      "RecipientCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Recipient full name"
+          },
+          "blood_type": {
+            "$ref": "#/components/schemas/BloodTypeEnum",
+            "description": "ABO/Rh blood group"
+          },
+          "organ_needed": {
+            "$ref": "#/components/schemas/OrganTypeEnum",
+            "description": "Organ or blood product needed"
+          },
+          "urgency_score": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Urgency Score",
+            "description": "Clinical urgency score from 1 (lowest) to 10 (critical)"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema",
+            "description": "Geographic coordinates of patient/hospital"
+          },
+          "hospital_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Hospital Id",
+            "description": "ID of registering hospital"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RecipientStatusEnum",
+            "description": "Initial status",
+            "default": "Waiting"
+          },
+          "recipient_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient Id",
+            "description": "Optional custom identifier (e.g. REC-001). Generated as UUID if omitted."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "blood_type",
+          "organ_needed",
+          "urgency_score",
+          "location",
+          "hospital_id"
+        ],
+        "title": "RecipientCreate"
+      },
+      "RecipientResponse": {
+        "properties": {
+          "recipient_id": {
+            "type": "string",
+            "title": "Recipient Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "blood_type": {
+            "$ref": "#/components/schemas/BloodTypeEnum"
+          },
+          "organ_needed": {
+            "$ref": "#/components/schemas/OrganTypeEnum"
+          },
+          "urgency_score": {
+            "type": "integer",
+            "title": "Urgency Score"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationSchema"
+          },
+          "waitlist_since": {
+            "type": "string",
+            "title": "Waitlist Since",
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RecipientStatusEnum"
+          },
+          "hospital_id": {
+            "type": "string",
+            "title": "Hospital Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recipient_id",
+          "name",
+          "blood_type",
+          "organ_needed",
+          "urgency_score",
+          "location",
+          "waitlist_since",
+          "status",
+          "hospital_id"
+        ],
+        "title": "RecipientResponse"
+      },
+      "RecipientStatusEnum": {
+        "type": "string",
+        "enum": [
+          "Waiting",
+          "Allocated"
+        ],
+        "title": "RecipientStatusEnum"
+      },
+      "RecipientUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "blood_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BloodTypeEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "organ_needed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrganTypeEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "urgency_score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Urgency Score"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocationSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hospital_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hospital Id"
+          }
+        },
+        "type": "object",
+        "title": "RecipientUpdate"
+      },
+      "RecipientUrgencyUpdate": {
+        "properties": {
+          "urgency_score": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Urgency Score",
+            "description": "Updated urgency score (1-10)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urgency_score"
+        ],
+        "title": "RecipientUrgencyUpdate"
+      },
+      "RootResponse": {
+        "properties": {
+          "application": {
+            "type": "string",
+            "title": "Application"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "docs_url": {
+            "type": "string",
+            "title": "Docs Url"
+          },
+          "openapi_url": {
+            "type": "string",
+            "title": "Openapi Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application",
+          "version",
+          "status",
+          "environment",
+          "docs_url",
+          "openapi_url"
+        ],
+        "title": "RootResponse",
+        "description": "Schema for root endpoint response."
+      },
+      "ScoreFactorBreakdown": {
+        "properties": {
+          "blood_compatibility_score": {
+            "type": "number",
+            "title": "Blood Compatibility Score",
+            "description": "ABO/Rh compatibility component (0-100 normalized)"
+          },
+          "urgency_score_component": {
+            "type": "number",
+            "title": "Urgency Score Component",
+            "description": "Recipient clinical urgency component (0-100 normalized)"
+          },
+          "distance_score_component": {
+            "type": "number",
+            "title": "Distance Score Component",
+            "description": "Proximity/logistics component (0-100 normalized)"
+          },
+          "distance_km": {
+            "type": "number",
+            "title": "Distance Km",
+            "description": "Haversine transit distance in kilometers between donor and hospital"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights",
+            "description": "Configured scoring weights applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "blood_compatibility_score",
+          "urgency_score_component",
+          "distance_score_component",
+          "distance_km",
+          "weights"
+        ],
+        "title": "ScoreFactorBreakdown"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "Signed JWT Bearer access token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "Token type, always 'bearer'",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Access token lifetime in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "TokenResponse"
+      },
+      "UserResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "Unique user identifier (e.g., USR-001)"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "description": "User unique username"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRoleEnum",
+            "description": "RBAC system role"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Account active status",
+            "default": true
+          },
+          "hospital_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hospital Id",
+            "description": "Associated hospital ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "role"
+        ],
+        "title": "UserResponse"
+      },
+      "UserRoleEnum": {
+        "type": "string",
+        "enum": [
+          "ADMIN",
+          "COORDINATOR",
+          "DOCTOR",
+          "AUDITOR"
+        ],
+        "title": "UserRoleEnum"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

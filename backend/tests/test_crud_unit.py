@@ -11,12 +11,24 @@ from app.services.recipient_service import RecipientService
 from app.services.hospital_service import HospitalService
 
 
+from app.core.dependencies import get_current_user
+from app.schemas.auth import UserResponse
+from app.schemas.enums import UserRoleEnum
+
+
 @pytest.fixture
 def app():
     test_app = create_app()
     mock_driver = MagicMock()
     test_app.dependency_overrides[get_db_driver] = lambda: mock_driver
+    test_app.dependency_overrides[get_current_user] = lambda: UserResponse(
+        user_id="USR-MOCK-ADMIN",
+        username="admin_test",
+        role=UserRoleEnum.ADMIN,
+        is_active=True,
+    )
     return test_app
+
 
 
 # -----------------------------------------------------------------------------

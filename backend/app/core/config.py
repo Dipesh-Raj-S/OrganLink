@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -37,11 +37,43 @@ class Settings(BaseSettings):
         description="Allowed CORS origins for frontend clients",
     )
 
+    # JWT Authentication Settings
+    JWT_SECRET: str = Field(
+        default="organlink-insecure-dev-jwt-secret-do-not-use-in-production-2026",
+        description="Cryptographic secret key for signing JWT tokens",
+    )
+    JWT_ALGORITHM: str = Field(
+        default="HS256",
+        description="Algorithm for JWT signing and verification (e.g., HS256)",
+    )
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        default=30,
+        ge=1,
+        le=1440,
+        description="Lifetime of access tokens in minutes (default 30 min)",
+    )
+    JWT_ISSUER: Optional[str] = Field(
+        default="organlink-auth",
+        description="JWT issuer claim (iss)",
+    )
+    JWT_AUDIENCE: Optional[str] = Field(
+        default="organlink-api",
+        description="JWT audience claim (aud)",
+    )
+
     @field_validator("NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD")
     @classmethod
     def check_non_empty(cls, v: str, info) -> str:
         if not v or not v.strip():
             raise ValueError(f"Configuration key '{info.field_name}' must not be empty.")
+        return v.strip()
+
+    @field_validator("JWT_SECRET")
+    @classmethod
+    def check_jwt_secret_in_prod(cls, v: str, info) -> str:
+        if not v or not v.strip():
+            raise ValueError("JWT_SECRET must not be empty.")
+        # We enforce that in production a secure secret is provided
         return v.strip()
 
     model_config = SettingsConfigDict(
