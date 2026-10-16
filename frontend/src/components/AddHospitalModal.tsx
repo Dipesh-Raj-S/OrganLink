@@ -1,0 +1,184 @@
+import React, { useState } from 'react';
+import { Hospital } from '../types';
+import { api, ApiError } from '../api/client';
+import { ErrorMessage } from './ErrorMessage';
+
+interface AddHospitalModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (newHospital: Hospital) => void;
+  initialData?: Hospital | null;
+}
+
+export const AddHospitalModal: React.FC<AddHospitalModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialData,
+}) => {
+  const isEditing = !!initialData;
+  const [name, setName] = useState(initialData?.name || '');
+  const [location, setLocation] = useState(initialData?.location || '');
+  const [tier, setTier] = useState(initialData?.tier || 'Level 1 Trauma & Transplant Center');
+  const [contactNumber, setContactNumber] = useState(initialData?.contact_number || '');
+  const [coordinatorName, setCoordinatorName] = useState(initialData?.coordinator_name || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<Error | ApiError | null>(null);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!name.trim()) {
+      setError(new Error('Hospital institution name is required'));
+      return;
+    }
+    if (!location.trim()) {
+      setError(new Error('Location is required'));
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: name.trim(),
+        location: location.trim(),
+        tier: tier.trim(),
+        contact_number: contactNumber.trim(),
+        coordinator_name: coordinatorName.trim(),
+      };
+
+      let result: Hospital;
+      if (isEditing && initialData) {
+        result = await api.patch<Hospital>(`/hospitals/${initialData.id}`, payload);
+      } else {
+        result = await api.post<Hospital>('/hospitals', payload);
+      }
+
+      onSuccess(result);
+      onClose();
+    } catch (err: any) {
+      setError(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
+      <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xs shadow-2xl p-6">
+        <div className="border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+            {isEditing ? `Edit Hospital Node ${initialData?.id}` : 'Register Hospital Center'}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-white font-mono text-xs"
+          >
+            [ESC]
+          </button>
+        </div>
+
+        <ErrorMessage error={error} />
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              Hospital Center Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Stanford University Medical Center"
+              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                Location (City, State) *
+              </label>
+              <input
+                type="text"
+                required
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Palo Alto, CA"
+                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                Contact Phone
+              </label>
+              <input
+                type="text"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+                placeholder="+1 (650) 723-4000"
+                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                Accreditation Tier
+              </label>
+              <select
+                value={tier}
+                onChange={(e) => setTier(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+              >
+                <option value="Level 1 Trauma & Transplant Center">Level 1 Trauma & Transplant Center</option>
+                <option value="Comprehensive Organ Transplant Center">Comprehensive Organ Transplant Center</option>
+                <option value="Academic Medical & Transplant Hub">Academic Medical & Transplant Hub</option>
+                <option value="Regional Organ Procurement Institute">Regional Organ Procurement Institute</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                Chief Transplant Coordinator
+              </label>
+              <input
+                type="text"
+                value={coordinatorName}
+                onChange={(e) => setCoordinatorName(e.target.value)}
+                placeholder="Dr. Coordinator Name"
+                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xs transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-1.5 text-xs font-medium tracking-wide bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors flex items-center gap-2"
+            >
+              {isSubmitting && (
+                <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              )}
+              <span>{isEditing ? 'Save Changes' : 'Register Hospital'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
