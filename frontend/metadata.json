@@ -1,0 +1,8 @@
+{
+  "name": "Organ/Blood Donor–Recipient Matching Network",
+  "description": "Clinical workstation for organ and blood donor-recipient compatibility matching, waitlist ranking, allocation tracking, and hospital network coordination.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
