@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { RotateCcw } from 'lucide-react';
 import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { DashboardStats, Recipient } from '../types';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorMessage } from '../components/ErrorMessage';
-import { StatusBadge } from '../components/StatusBadge';
-import { useAuth } from '../auth/AuthContext';
 
 export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | ApiError | null>(null);
-  const { role } = useAuth();
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -31,200 +29,186 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   if (isLoading) {
-    return <LoadingState message="Querying live network dashboard telemetry..." rows={6} />;
+    return <LoadingState message="Loading network overview..." rows={6} />;
   }
 
   if (error || !stats) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
-          Clinical Operations Dashboard
-        </h1>
+      <div className="space-y-4 max-w-7xl mx-auto">
+        <h1 className="page-title">Clinical Operations Overview</h1>
         <ErrorMessage error={error} onRetry={fetchStats} />
       </div>
     );
   }
 
+  const kpi = (label: string, value: number, sub: string, valueClass = 'text-slate-900') => (
+    <div className="card p-4">
+      <div className="text-[11px] font-medium text-slate-500">{label}</div>
+      <div className={`mt-1.5 text-xl font-semibold tabular-nums ${valueClass}`}>{value}</div>
+      <div className="mt-0.5 text-[11px] text-slate-400">{sub}</div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Title & Quick Refresh */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="space-y-5 max-w-7xl mx-auto">
+      {/* Title & refresh */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
-            Clinical Operations Overview
-          </h1>
-          <p className="text-xs text-slate-400 font-sans">
-            Real-time donor procurement telemetry, algorithmic candidate pipelines, and critical waitlist monitors.
+          <h1 className="page-title">Clinical Operations Overview</h1>
+          <p className="page-subtitle">
+            Donor procurement, candidate pipelines, and critical waitlist monitors.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={fetchStats}
-            className="px-3 py-1.5 text-xs font-mono font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xs transition-colors flex items-center gap-1.5"
-          >
-            <span>Refresh Telemetry</span>
-          </button>
-        </div>
+        <button type="button" onClick={fetchStats} className="btn-secondary shrink-0">
+          <RotateCcw size={14} className="text-slate-400" />
+          <span>Refresh</span>
+        </button>
       </div>
 
-      {/* Primary KPI Metric Strips */}
+      {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {/* Card 1: Total Donors */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xs">
-          <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Total Donors</div>
-          <div className="mt-2 text-2xl font-mono font-bold text-white tabular-nums">
-            {stats.total_donors}
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400 font-mono">Registered records</div>
-        </div>
-
-        {/* Card 2: Available Donors */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xs">
-          <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Available Donors</div>
-          <div className="mt-2 text-2xl font-mono font-bold text-emerald-400 tabular-nums">
-            {stats.available_donors}
-          </div>
-          <div className="mt-1 text-[11px] text-emerald-500/80 font-mono">Ready for matching</div>
-        </div>
-
-        {/* Card 3: Total Recipients Waiting */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xs">
-          <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Active Waitlist</div>
-          <div className="mt-2 text-2xl font-mono font-bold text-cyan-400 tabular-nums">
-            {stats.total_recipients_waiting}
-          </div>
-          <div className="mt-1 text-[11px] text-cyan-500/80 font-mono">Awaiting organ match</div>
-        </div>
-
-        {/* Card 4: Confirmed Allocations */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xs">
-          <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Allocations</div>
-          <div className="mt-2 text-2xl font-mono font-bold text-slate-200 tabular-nums">
-            {stats.confirmed_allocations}
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400 font-mono">Confirmed transplants</div>
-        </div>
-
-        {/* Card 5: Donors Approaching Expiry */}
-        <div className={`p-4 rounded-xs border ${
-          stats.donors_approaching_expiry > 0
-            ? 'bg-red-950/40 border-red-800/80'
-            : 'bg-slate-900 border-slate-800'
-        }`}>
-          <div className="text-[11px] font-mono text-red-400 uppercase tracking-wider font-semibold">
+        {kpi('Total Donors', stats.total_donors, 'Registered records')}
+        {kpi(
+          'Available Donors',
+          stats.available_donors,
+          'Ready for matching',
+          'text-emerald-600'
+        )}
+        {kpi('Active Waitlist', stats.total_recipients_waiting, 'Awaiting a match', 'text-brand-ink')}
+        {kpi('Allocations', stats.confirmed_allocations, 'Confirmed transplants')}
+        <div
+          className={`p-4 rounded-lg border ${
+            stats.donors_approaching_expiry > 0
+              ? 'bg-red-50 border-red-200'
+              : 'bg-white border-slate-200'
+          }`}
+        >
+          <div
+            className={`text-[11px] font-medium ${
+              stats.donors_approaching_expiry > 0 ? 'text-red-700' : 'text-slate-500'
+            }`}
+          >
             Expiring (&lt;12h)
           </div>
-          <div className="mt-2 text-2xl font-mono font-bold text-red-400 tabular-nums">
+          <div
+            className={`mt-1.5 text-xl font-semibold tabular-nums ${
+              stats.donors_approaching_expiry > 0 ? 'text-red-700' : 'text-slate-900'
+            }`}
+          >
             {stats.donors_approaching_expiry}
           </div>
-          <div className="mt-1 text-[11px] text-red-400/80 font-mono">Critical viability window</div>
+          <div
+            className={`mt-0.5 text-[11px] ${
+              stats.donors_approaching_expiry > 0 ? 'text-red-500' : 'text-slate-400'
+            }`}
+          >
+            Critical viability window
+          </div>
         </div>
       </div>
 
-      {/* Secondary Status Breakdown & Organ Distribution */}
+      {/* Breakdowns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Donor Status Breakdown */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xs space-y-3">
-          <div className="text-xs font-mono font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-2">
-            Donor Registry Status Breakdown
+        {/* Donor status breakdown */}
+        <div className="card p-4 space-y-3">
+          <div className="section-heading border-b border-slate-200 pb-2.5">
+            Donor Status Breakdown
           </div>
-          <div className="space-y-2 text-xs font-mono">
-            <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
-              <span className="text-emerald-400">AVAILABLE</span>
-              <span className="font-bold text-white tabular-nums">{stats.status_breakdown.available}</span>
-            </div>
-            {stats.status_breakdown.reserved != null && (
-              <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
-                <span className="text-violet-400">RESERVED</span>
-                <span className="font-bold text-white tabular-nums">{stats.status_breakdown.reserved}</span>
+          <div className="space-y-1.5 text-xs">
+            {[
+              { label: 'Available', value: stats.status_breakdown.available, cls: 'text-emerald-700' },
+              ...(stats.status_breakdown.reserved != null
+                ? [{ label: 'Reserved', value: stats.status_breakdown.reserved, cls: 'text-violet-700' }]
+                : []),
+              ...(stats.status_breakdown.matched != null
+                ? [{ label: 'Matched (Under Review)', value: stats.status_breakdown.matched, cls: 'text-brand-ink' }]
+                : []),
+              { label: 'Allocated', value: stats.status_breakdown.allocated, cls: 'text-slate-700' },
+              { label: 'Expired', value: stats.status_breakdown.expired, cls: 'text-red-600' },
+            ].map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between px-2.5 py-2 bg-slate-50 rounded-md"
+              >
+                <span className={row.cls}>{row.label}</span>
+                <span className="font-semibold text-slate-900 tabular-nums">{row.value}</span>
               </div>
-            )}
-            {stats.status_breakdown.matched != null && (
-              <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
-                <span className="text-cyan-400">MATCHED (Under Review)</span>
-                <span className="font-bold text-white tabular-nums">{stats.status_breakdown.matched}</span>
-              </div>
-            )}
-            <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
-              <span className="text-slate-300">ALLOCATED</span>
-              <span className="font-bold text-white tabular-nums">{stats.status_breakdown.allocated}</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
-              <span className="text-red-400">EXPIRED</span>
-              <span className="font-bold text-white tabular-nums">{stats.status_breakdown.expired}</span>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Organ Type Breakdown */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xs space-y-3 lg:col-span-2">
-          <div className="text-xs font-mono font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-2">
-            Procured Organ & Tissue Volume
+        {/* Organ distribution */}
+        <div className="card p-4 space-y-3 lg:col-span-2">
+          <div className="section-heading border-b border-slate-200 pb-2.5">
+            Organ &amp; Tissue Volume
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {Object.entries(stats.organ_breakdown).map(([organ, count]) => (
-              <div key={organ} className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-                <div className="text-[11px] text-slate-400 truncate">{organ}</div>
-                <div className="text-lg font-bold text-cyan-400 mt-1 tabular-nums">{count}</div>
+              <div key={organ} className="p-3 bg-slate-50 rounded-md">
+                <div className="text-[11px] text-slate-500 capitalize truncate">{organ}</div>
+                <div className="text-base font-semibold text-slate-900 mt-0.5 tabular-nums">
+                  {count}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Critical Waitlist High-Priority Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xs p-4 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      {/* Critical waitlist table */}
+      <div className="card p-0 space-y-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-slate-200">
           <div>
-            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-              Critical Urgency Recipients Requiring Matching
-            </h2>
-            <p className="text-[11px] text-slate-400 font-sans">
+            <h2 className="section-heading">Critical Waitlist — Urgency Priority</h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">
               {isMockApiEnabled()
-                ? 'Patients with urgency score ≥ 80 prioritized by clinical severity.'
-                : 'Top waiting-list patients ranked by backend clinical urgency (authoritative 1-10 scale).'}
+                ? 'Patients with urgency score ≥ 80, prioritized by clinical severity.'
+                : 'Top waiting-list patients ranked by backend clinical urgency (1-10 scale).'}
             </p>
           </div>
           <Link
             to="/recipients"
-            className="text-xs font-mono text-cyan-400 hover:text-cyan-300 underline underline-offset-4"
+            className="text-xs font-medium text-brand-ink hover:text-navy shrink-0"
           >
-            View Full Waitlist ({stats.total_recipients_waiting})
+            View full waitlist ({stats.total_recipients_waiting})
           </Link>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-sans">
-            <thead className="bg-slate-950 font-mono text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200">
               <tr>
-                <th className="py-2.5 px-3">Recipient ID</th>
-                <th className="py-2.5 px-3">Patient Name</th>
-                <th className="py-2.5 px-3">ABO</th>
-                <th className="py-2.5 px-3">Organ Needed</th>
-                <th className="py-2.5 px-3">Urgency Score</th>
-                <th className="py-2.5 px-3">Hospital Center</th>
-                <th className="py-2.5 px-3 text-right">Action</th>
+                <th className="py-2.5 px-4 font-medium">Recipient</th>
+                <th className="py-2.5 px-4 font-medium">Patient Name</th>
+                <th className="py-2.5 px-4 font-medium">ABO</th>
+                <th className="py-2.5 px-4 font-medium">Organ Needed</th>
+                <th className="py-2.5 px-4 font-medium">Urgency</th>
+                <th className="py-2.5 px-4 font-medium">Hospital</th>
+                <th className="py-2.5 px-4 font-medium text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody className="divide-y divide-slate-100">
+              {stats.urgent_recipients.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-400">
+                    No critical recipients on the waiting list.
+                  </td>
+                </tr>
+              )}
               {stats.urgent_recipients.map((r: Recipient) => (
-                <tr key={r.id} className="hover:bg-slate-850/50 transition-colors">
-                  <td className="py-2.5 px-3 font-bold text-cyan-400">{r.id}</td>
-                  <td className="py-2.5 px-3 text-slate-200 font-sans font-medium">{r.name}</td>
-                  <td className="py-2.5 px-3 font-bold text-white">{r.blood_type}</td>
-                  <td className="py-2.5 px-3 text-slate-300">{r.organ_needed}</td>
-                  <td className="py-2.5 px-3">
-                    <span className="font-bold text-red-400 tabular-nums">
+                <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-2.5 px-4 font-medium text-brand-ink">{r.id}</td>
+                  <td className="py-2.5 px-4 text-slate-800">{r.name}</td>
+                  <td className="py-2.5 px-4 font-semibold text-slate-800">{r.blood_type}</td>
+                  <td className="py-2.5 px-4 text-slate-600">{r.organ_needed}</td>
+                  <td className="py-2.5 px-4">
+                    <span className="font-semibold text-red-600 tabular-nums">
                       {r.urgency_score} / {r.urgency_denominator === 10 ? 10 : 100}
                     </span>
                   </td>
-                  <td className="py-2.5 px-3 text-slate-300 font-sans">{r.hospital_name || r.id}</td>
-                  <td className="py-2.5 px-3 text-right">
-                    <Link
-                      to={`/matching/${r.id}`}
-                      className="inline-block px-2.5 py-1 text-[11px] font-mono font-semibold bg-cyan-900/80 hover:bg-cyan-800 text-cyan-200 border border-cyan-600 rounded-xs transition-colors"
-                    >
+                  <td className="py-2.5 px-4 text-slate-500">{r.hospital_name || r.id}</td>
+                  <td className="py-2.5 px-4 text-right">
+                    <Link to={`/matching/${r.id}`} className="btn-accent !py-1 !px-2.5">
                       Find Candidates
                     </Link>
                   </td>

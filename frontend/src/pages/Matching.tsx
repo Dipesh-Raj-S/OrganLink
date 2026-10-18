@@ -102,12 +102,12 @@ export const Matching: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title & View Mode Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+          <h1 className="text-lg font-semibold text-navy">
             Algorithmic Compatibility Matching Engine
           </h1>
-          <p className="text-xs text-slate-400 font-sans">
+          <p className="text-xs text-slate-500 font-sans">
             {isMockApiEnabled()
               ? 'Automated ranking evaluating ABO blood compatibility, organ viability decay, geographic transit distance, and HLA matching.'
               : 'Backend ranking evaluates ABO compatibility (40%), recipient clinical urgency (35%), and transit distance (25%); each candidate row shows the backend score explanation.'}
@@ -115,14 +115,14 @@ export const Matching: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex bg-slate-900 border border-slate-800 rounded-xs p-1 text-xs font-mono">
+          <div className="flex bg-white border border-slate-200 rounded-lg p-1 text-xs ">
             <button
               type="button"
               onClick={() => setIsReverseMode(false)}
-              className={`px-3 py-1 rounded-xs transition-colors ${
+              className={`px-3 py-1 rounded-md transition-colors ${
                 !isReverseMode
-                  ? 'bg-cyan-950 text-cyan-300 font-semibold border border-cyan-800'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-accent text-navy font-semibold border border-accent-border'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               Recipient View
@@ -133,10 +133,10 @@ export const Matching: React.FC = () => {
                 setIsReverseMode(true);
                 if (selectedDonorId) loadReverseData(selectedDonorId);
               }}
-              className={`px-3 py-1 rounded-xs transition-colors ${
+              className={`px-3 py-1 rounded-md transition-colors ${
                 isReverseMode
-                  ? 'bg-cyan-950 text-cyan-300 font-semibold border border-cyan-800'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-accent text-navy font-semibold border border-accent-border'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               Reverse Donor View
@@ -151,25 +151,25 @@ export const Matching: React.FC = () => {
         /* STANDARD RECIPIENT -> CANDIDATE MATCHING */
         <div className="space-y-6">
           {/* Target Recipient Selector & Dossier Card */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xs p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-cyan-400 rounded-xs"></span>
-                <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                <span className="w-2 h-2 bg-brand rounded-md"></span>
+                <span className="text-xs font-semibold text-slate-700">
                   Target Recipient Patient File
                 </span>
               </div>
 
               {/* Patient Selector Dropdown */}
-              <div className="flex items-center gap-2 text-xs font-mono">
-                <span className="text-slate-400">Select Patient:</span>
+              <div className="flex items-center gap-2 text-xs ">
+                <span className="text-slate-500">Select Patient:</span>
                 <select
                   value={recipient?.id || ''}
                   onChange={(e) => handleRecipientSwitch(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-2.5 py-1 text-cyan-300 font-mono font-bold text-xs outline-none"
+                  className="bg-white border border-slate-300 focus:border-brand rounded-md px-2.5 py-1 text-navy font-bold text-xs outline-none"
                 >
                   {allRecipients.map((r) => (
-                    <option key={r.id} value={r.id} className="bg-slate-900 text-white">
+                    <option key={r.id} value={r.id} className="bg-white text-slate-900">
                       {r.name} ({r.id}) · {r.organ_needed} · {r.blood_type}
                     </option>
                   ))}
@@ -178,55 +178,55 @@ export const Matching: React.FC = () => {
             </div>
 
             {recipient && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-mono">
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Patient Name</span>
-                  <span className="text-white font-semibold text-sm truncate block mt-0.5">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs ">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Patient Name</span>
+                  <span className="text-slate-900 font-semibold text-sm truncate block mt-0.5">
                     {recipient.name}
                   </span>
-                  <span className="text-[10px] text-slate-400">ID: {recipient.id}</span>
+                  <span className="text-[11px] text-slate-500">ID: {recipient.id}</span>
                 </div>
 
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Organ Needed</span>
-                  <span className="text-cyan-400 font-bold text-sm block mt-0.5">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Organ Needed</span>
+                  <span className="text-brand-ink font-semibold text-sm block mt-0.5">
                     {recipient.organ_needed}
                   </span>
-                  <span className="text-[10px] text-slate-400">Required graft</span>
+                  <span className="text-[11px] text-slate-500">Required graft</span>
                 </div>
 
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Blood Group</span>
-                  <span className="text-white font-bold text-sm block mt-0.5">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Blood Group</span>
+                  <span className="text-slate-900 font-semibold text-sm block mt-0.5">
                     {recipient.blood_type}
                   </span>
-                  <span className="text-[10px] text-slate-400">ABO Rh Profile</span>
+                  <span className="text-[11px] text-slate-500">ABO Rh Profile</span>
                 </div>
 
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Urgency Score</span>
-                  <span className="text-red-400 font-bold text-sm block mt-0.5 tabular-nums">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Urgency Score</span>
+                  <span className="text-slate-900 font-semibold text-sm block mt-0.5 tabular-nums">
                     {recipient.urgency_score} / {recipient.urgency_denominator === 10 ? 10 : 100}
                   </span>
-                  <span className="text-[10px] text-red-500/80">
+                  <span className="text-[11px] text-slate-500">
                     {recipient.clinical_priority || (recipient.urgency_denominator === 10 ? 'Live scale: 1-10' : 'Priority')}
                   </span>
                 </div>
 
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Hospital Center</span>
-                  <span className="text-slate-200 text-xs truncate block mt-0.5">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Hospital Center</span>
+                  <span className="text-slate-800 text-xs truncate block mt-0.5">
                     {recipient.hospital_name}
                   </span>
-                  <span className="text-[10px] text-slate-400">{recipient.location}</span>
+                  <span className="text-[11px] text-slate-500">{recipient.location}</span>
                 </div>
 
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Waitlist Status</span>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Waitlist Status</span>
                   <div className="mt-1">
                     <StatusBadge status={recipient.status} />
                   </div>
-                  <span className="text-[10px] text-slate-400 block mt-1">
+                  <span className="text-[11px] text-slate-500 block mt-1">
                     Since {new Date(recipient.waiting_list_date).toLocaleDateString()}
                   </span>
                 </div>
@@ -238,10 +238,10 @@ export const Matching: React.FC = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                <h2 className="text-xs font-semibold text-slate-700">
                   Ranked Compatible Donor Candidates ({candidates.length} Found)
                 </h2>
-                <p className="text-[11px] text-slate-400 font-sans">
+                <p className="text-[11px] text-slate-500 font-sans">
                   Candidates filtered by ABO compatibility, valid viability windows, and ranked by composite match algorithm.
                 </p>
               </div>
@@ -250,11 +250,11 @@ export const Matching: React.FC = () => {
             {isLoading ? (
               <LoadingState message="Executing Cypher compatibility graph traversal..." rows={4} />
             ) : candidates.length === 0 ? (
-              <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-xs space-y-2">
-                <p className="text-xs font-mono text-slate-300 uppercase font-semibold">
+              <div className="py-12 text-center bg-white border border-slate-200 rounded-lg space-y-2">
+                <p className="text-xs font-semibold text-slate-700">
                   No Compatible Donors Currently Available
                 </p>
-                <p className="text-[11px] text-slate-400 max-w-md mx-auto">
+                <p className="text-[11px] text-slate-500 max-w-md mx-auto">
                   No donors matching ABO compatibility for {recipient?.blood_type} with available {recipient?.organ_needed} organs within active viability thresholds were found.
                 </p>
               </div>
@@ -263,37 +263,37 @@ export const Matching: React.FC = () => {
                 {candidates.map((cand, index) => (
                   <div
                     key={cand.donor_id}
-                    className="bg-slate-900 border border-slate-800 hover:border-slate-700 p-4 rounded-xs transition-colors"
+                    className="bg-white border border-slate-200 hover:border-slate-300 p-4 rounded-md transition-colors"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       {/* Left: Rank, Donor details */}
                       <div className="flex items-start gap-4">
-                        <div className="w-9 h-9 bg-slate-950 border border-slate-800 rounded-xs flex items-center justify-center font-mono font-bold text-sm text-cyan-400 shrink-0">
+                        <div className="w-9 h-9 bg-slate-50 border border-slate-200 rounded-md flex items-center justify-center font-bold text-sm text-brand-ink shrink-0">
                           #{index + 1}
                         </div>
 
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-white font-sans">
+                            <span className="text-sm font-semibold text-slate-800">
                               {cand.donor_name}
                             </span>
-                            <span className="text-xs font-mono text-cyan-400 font-bold">
+                            <span className="text-xs text-brand-ink font-semibold">
                               {cand.donor_id}
                             </span>
                             {cand.donor_status && <StatusBadge status={cand.donor_status} />}
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-slate-400">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                             <span>
-                              Organ: <span className="text-slate-200 font-semibold">{cand.organ_type}</span>
+                              Organ: <span className="text-slate-800 font-semibold">{cand.organ_type}</span>
                             </span>
                             <span>
-                              ABO: <span className="text-white font-bold">{cand.blood_type}</span>
+                              ABO: <span className="text-slate-900 font-semibold">{cand.blood_type}</span>
                               {cand.blood_compatibility ? ` (${cand.blood_compatibility})` : ''}
                             </span>
                             {cand.hospital_name && (
                               <span>
-                                Procurement: <span className="text-slate-300 font-sans">{cand.hospital_name}</span>
+                                Procurement: <span className="text-slate-600 font-sans">{cand.hospital_name}</span>
                               </span>
                             )}
                           </div>
@@ -301,18 +301,18 @@ export const Matching: React.FC = () => {
                       </div>
 
                       {/* Middle: Metrics (Distance, Expiry, HLA) */}
-                      <div className="flex flex-wrap items-center gap-4 text-xs font-mono bg-slate-950 p-2.5 rounded-xs border border-slate-850">
+                      <div className="flex flex-wrap items-center gap-4 text-xs bg-slate-50 p-2.5 rounded-md border border-slate-200">
                         <div>
-                          <span className="text-[10px] text-slate-400 uppercase block">Distance</span>
-                          <span className="text-slate-200 font-semibold tabular-nums">{cand.distance_km} km</span>
+                          <span className="text-[11px] font-medium text-slate-500 block">Distance</span>
+                          <span className="text-slate-800 font-semibold tabular-nums">{cand.distance_km} km</span>
                         </div>
 
                         <div>
-                          <span className="text-[10px] text-slate-400 uppercase block">Tissue Viability</span>
+                          <span className="text-[11px] font-medium text-slate-500 block">Tissue Viability</span>
                           {cand.expires_at ? (
                             <ExpiryCountdown expiresAt={cand.expires_at} />
                           ) : (
-                            <span className="text-slate-200 font-semibold tabular-nums">
+                            <span className="text-slate-800 font-semibold tabular-nums">
                               {typeof cand.expiry_window_hours === 'number'
                                 ? `${cand.expiry_window_hours}h window`
                                 : '—'}
@@ -322,18 +322,18 @@ export const Matching: React.FC = () => {
 
                         {typeof cand.hla_match_score === 'number' && (
                           <div>
-                            <span className="text-[10px] text-slate-400 uppercase block">HLA Match</span>
-                            <span className="text-emerald-400 font-semibold tabular-nums">
+                            <span className="text-[11px] font-medium text-slate-500 block">HLA Match</span>
+                            <span className="text-emerald-700 font-semibold tabular-nums">
                               {cand.hla_match_score}%
                             </span>
                           </div>
                         )}
 
-                        <div className="border-l border-slate-800 pl-3">
-                          <span className="text-[10px] text-cyan-400 uppercase block font-bold">
+                        <div className="border-l border-slate-200 pl-3">
+                          <span className="text-[11px] font-medium text-slate-500 block">
                             Match Score
                           </span>
-                          <span className="text-base font-bold text-emerald-400 tabular-nums">
+                          <span className="text-base font-bold text-emerald-700 tabular-nums">
                             {cand.match_score} pts
                           </span>
                         </div>
@@ -348,7 +348,7 @@ export const Matching: React.FC = () => {
                               setSelectedCandidateForMatch(cand);
                               setIsMatchModalOpen(true);
                             }}
-                            className="px-4 py-2 text-xs font-mono font-bold tracking-wider uppercase bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors whitespace-nowrap"
+                            className="px-4 py-2 text-xs font-bold tracking-wider uppercase bg-navy hover:bg-navy-dark text-white border border-transparent rounded-md transition-colors whitespace-nowrap"
                           >
                             Create Match Request
                           </button>
@@ -358,8 +358,8 @@ export const Matching: React.FC = () => {
 
                     {/* Backend scoring rationale (live mode). Displayed verbatim; never fabricated. */}
                     {cand.explanation && (
-                      <div className="mt-3 pt-2 border-t border-slate-800/60 text-[11px] text-slate-400 font-mono leading-relaxed">
-                        <span className="text-cyan-500/80 uppercase">Score explanation:</span> {cand.explanation}
+                      <div className="mt-3 pt-2 border-t border-slate-200 text-[11px] text-slate-500 leading-relaxed">
+                        <span className="text-brand-ink font-medium">Score explanation:</span> {cand.explanation}
                       </div>
                     )}
                   </div>
@@ -371,27 +371,27 @@ export const Matching: React.FC = () => {
       ) : (
         /* REVERSE VIEW: Select Donor -> Find Waiting Recipients */
         <div className="space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-xs p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-400 rounded-xs"></span>
-                <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                <span className="w-2 h-2 bg-emerald-400 rounded-md"></span>
+                <span className="text-xs font-semibold text-slate-700">
                   Select Donor Candidate for Reverse Recipient Match
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-xs font-mono">
-                <span className="text-slate-400">Available Donor:</span>
+              <div className="flex items-center gap-2 text-xs ">
+                <span className="text-slate-500">Available Donor:</span>
                 <select
                   value={selectedDonorId}
                   onChange={(e) => {
                     setSelectedDonorId(e.target.value);
                     loadReverseData(e.target.value);
                   }}
-                  className="bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-2.5 py-1 text-cyan-300 font-mono font-bold text-xs outline-none"
+                  className="bg-white border border-slate-300 focus:border-brand rounded-md px-2.5 py-1 text-navy font-bold text-xs outline-none"
                 >
                   {allDonors.map((d) => (
-                    <option key={d.id} value={d.id} className="bg-slate-900 text-white">
+                    <option key={d.id} value={d.id} className="bg-white text-slate-900">
                       {d.name} ({d.id}) · {d.organ_type} · {d.blood_type}
                     </option>
                   ))}
@@ -399,53 +399,53 @@ export const Matching: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 font-sans leading-relaxed">
+            <p className="text-xs text-slate-600 font-sans leading-relaxed">
               Querying reverse candidates for donors nearing organ procurement window. Displays waitlisted patients who match the donor's organ and ABO criteria.
             </p>
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-slate-700">
               Compatible Waitlisted Recipients ({reverseCandidates.length})
             </h2>
 
             {reverseCandidates.length === 0 ? (
-              <div className="p-8 text-center bg-slate-900 border border-slate-800 rounded-xs">
-                <p className="text-xs font-mono text-slate-400">No matching waitlist recipients</p>
+              <div className="p-8 text-center bg-white border border-slate-200 rounded-lg">
+                <p className="text-xs text-slate-500">No matching waitlist recipients</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-2">
                 {reverseCandidates.map((r) => (
                   <div
                     key={r.recipient_id}
-                    className="p-3 bg-slate-900 border border-slate-800 rounded-xs flex items-center justify-between"
+                    className="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between"
                   >
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">{r.recipient_name}</span>
-                        <span className="text-xs font-mono text-cyan-400">{r.recipient_id}</span>
-                        <span className="text-xs font-mono font-bold text-white bg-slate-950 px-1.5 py-0.5 border border-slate-800 rounded-xs">
+                        <span className="text-sm font-semibold text-slate-900">{r.recipient_name}</span>
+                        <span className="text-xs text-brand-ink">{r.recipient_id}</span>
+                        <span className="text-xs font-semibold text-slate-900 bg-slate-50 px-1.5 py-0.5 border border-slate-200 rounded-md">
                           {r.blood_type}
                         </span>
                       </div>
-                      <div className="text-xs text-slate-400 font-mono">
+                      <div className="text-xs text-slate-500 ">
                         Hospital: {r.hospital_name || '—'} · Urgency:{' '}
-                        <span className="text-red-400 font-bold">
+                        <span className="text-red-600 font-bold">
                           {r.urgency_score}
                           {!isMockApiEnabled() ? ' /10' : ''}
                         </span>
                         {typeof r.distance_km === 'number' ? ` · ${r.distance_km} km` : ''} · Match:{' '}
-                        <span className="text-emerald-400 font-bold">{r.match_score}</span>
+                        <span className="text-emerald-700 font-bold">{r.match_score}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <span className="text-sm font-mono font-bold text-emerald-400">
+                      <span className="text-sm font-bold text-emerald-700">
                         {r.match_score} pts
                       </span>
                       <Link
                         to={`/matching/${r.recipient_id}`}
-                        className="px-3 py-1.5 text-xs font-mono font-bold bg-cyan-700 hover:bg-cyan-600 text-white rounded-xs"
+                        className="px-3 py-1.5 text-xs font-medium bg-navy hover:bg-navy-dark text-white rounded-md"
                       >
                         Inspect Dossier
                       </Link>

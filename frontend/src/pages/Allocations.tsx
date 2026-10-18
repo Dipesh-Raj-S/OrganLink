@@ -47,20 +47,20 @@ export const Allocations: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title & Audit Notice */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+          <h1 className="text-lg font-semibold text-navy">
             Transplant Allocation Audit Ledger
           </h1>
-          <p className="text-xs text-slate-400 font-sans">
+          <p className="text-xs text-slate-500 font-sans">
             Cryptographically sealed, append-only historical audit records of executed organ and blood transfers.
           </p>
         </div>
 
         {isAuditor && (
-          <div className="bg-amber-950/60 border border-amber-700/80 px-3 py-1.5 rounded-xs text-xs font-mono text-amber-300 flex items-center gap-2">
-            <span className="w-2 h-2 bg-amber-400 rounded-xs"></span>
-            <span>AUDITOR PROTOCOL: PHI MASKING ACTIVE</span>
+          <div className="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-md text-xs text-amber-700 flex items-center gap-2">
+            <span className="w-2 h-2 bg-amber-400 rounded-md"></span>
+            <span>Auditor protocol: PHI masking active</span>
           </div>
         )}
       </div>
@@ -70,14 +70,14 @@ export const Allocations: React.FC = () => {
       {isLoading ? (
         <LoadingState message="Verifying allocation audit signatures..." rows={5} />
       ) : allocations.length === 0 ? (
-        <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-xs">
-          <p className="text-xs font-mono text-slate-400 uppercase">No completed allocations recorded in ledger</p>
+        <div className="py-12 text-center bg-white border border-slate-200 rounded-lg">
+          <p className="text-xs text-slate-500">No completed allocations recorded in ledger</p>
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
-              <thead className="bg-slate-950 font-mono text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-50 text-[11px] font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="py-2.5 px-3">Allocation ID</th>
                   <th className="py-2.5 px-3">Donor Source</th>
@@ -89,37 +89,37 @@ export const Allocations: React.FC = () => {
                   <th className="py-2.5 px-3 text-right">Transfer Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-slate-100 ">
                 {allocations.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-850/50 transition-colors">
-                    <td className="py-2.5 px-3 font-bold text-cyan-400">{a.id}</td>
+                  <tr key={a.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3 font-medium text-brand-ink">{a.id}</td>
                     <td className="py-2.5 px-3 font-sans">
-                      <div className="text-slate-200 font-semibold">
+                      <div className="text-slate-800 font-semibold">
                         {maskName(a.donor_name, a.donor_id)}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
+                      <div className="text-[11px] text-slate-500 ">
                         {isAuditor ? 'ID: [REDACTED]' : `ID: ${a.donor_id}`}
                       </div>
                     </td>
                     <td className="py-2.5 px-3 font-sans">
-                      <div className="text-slate-200 font-semibold">
+                      <div className="text-slate-800 font-semibold">
                         {maskName(a.recipient_name, a.recipient_id)}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
+                      <div className="text-[11px] text-slate-500 ">
                         {isAuditor ? 'ID: [REDACTED]' : `ID: ${a.recipient_id}`}
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-cyan-300 font-semibold">
-                      {a.organ_type || <span className="text-slate-600 font-mono">From donor {a.donor_id}</span>}
+                    <td className="py-2.5 px-3 text-slate-800 font-medium">
+                      {a.organ_type || <span className="text-slate-600 ">From donor {a.donor_id}</span>}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-white">
-                      {a.blood_type || <span className="text-slate-600 font-mono">—</span>}
+                    <td className="py-2.5 px-3 font-semibold text-slate-900">
+                      {a.blood_type || <span className="text-slate-600 ">—</span>}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300 font-sans">
+                    <td className="py-2.5 px-3 text-slate-600 font-sans">
                       <div>{a.confirming_hospital_name}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">ID: {a.confirming_hospital_id}</div>
+                      <div className="text-[11px] text-slate-500 ">ID: {a.confirming_hospital_id}</div>
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300 text-[11px] tabular-nums">
+                    <td className="py-2.5 px-3 text-slate-600 text-[11px] tabular-nums">
                       {new Date(a.confirmation_date).toLocaleString()}
                     </td>
                     <td className="py-2.5 px-3 text-right">
@@ -131,11 +131,11 @@ export const Allocations: React.FC = () => {
             </table>
           </div>
 
-          <div className="p-3 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-mono text-slate-400">
+          <div className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
             <div>
-              Total Audit Records: <span className="text-white font-bold">{total}</span>
+              Total Audit Records: <span className="text-slate-900 font-semibold">{total}</span>
             </div>
-            <div className="text-[11px] text-slate-400">
+            <div className="text-[11px] text-slate-500">
               * Historical immutable ledger. Modification and deletion prohibited under procurement regulations.
             </div>
           </div>

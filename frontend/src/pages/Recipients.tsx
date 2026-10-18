@@ -83,12 +83,12 @@ export const Recipients: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title & Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+          <h1 className="text-lg font-semibold text-navy">
             Recipient Waitlist Management
           </h1>
-          <p className="text-xs text-slate-400 font-sans">
+          <p className="text-xs text-slate-500 font-sans">
             Candidate prioritization matrix based on clinical urgency, organ failure severity, and waitlist time.
           </p>
         </div>
@@ -99,7 +99,7 @@ export const Recipients: React.FC = () => {
               setEditingRecipient(null);
               setIsAddModalOpen(true);
             }}
-            className="px-3.5 py-1.5 text-xs font-mono font-bold uppercase tracking-wider bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors shrink-0"
+            className="px-3.5 py-1.5 text-xs font-medium bg-navy hover:bg-navy-dark text-white border border-transparent rounded-md transition-colors shrink-0"
           >
             + Enroll Recipient
           </button>
@@ -109,11 +109,11 @@ export const Recipients: React.FC = () => {
       <ErrorMessage error={error} onRetry={fetchRecipients} />
 
       {/* Filter and Search Bar */}
-      <div className="bg-slate-900 border border-slate-800 p-4 rounded-xs space-y-3">
+      <div className="bg-white border border-slate-200 p-4 rounded-md space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search */}
           <form onSubmit={handleSearchSubmit} className="col-span-1 sm:col-span-2 lg:col-span-1">
-            <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">
               Search Patient / ID
             </label>
             <div className="flex">
@@ -122,11 +122,11 @@ export const Recipients: React.FC = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Name, ID, or Hospital..."
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-l-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-l-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
               />
               <button
                 type="submit"
-                className="px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-l-0 border-slate-700 rounded-r-xs text-xs font-mono"
+                className="px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-l-0 border-slate-300 rounded-r-md text-xs "
               >
                 Go
               </button>
@@ -135,7 +135,7 @@ export const Recipients: React.FC = () => {
 
           {/* Blood Type Filter */}
           <div>
-            <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">
               ABO Blood Group
             </label>
             <select
@@ -144,7 +144,7 @@ export const Recipients: React.FC = () => {
                 setBloodTypeFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-2.5 py-1.5 text-xs text-white outline-none font-mono"
+              className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
             >
               <option value="">All Blood Types</option>
               <option value="O-">O-</option>
@@ -160,7 +160,7 @@ export const Recipients: React.FC = () => {
 
           {/* Organ Needed Filter */}
           <div>
-            <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">
               Organ Needed
             </label>
             <select
@@ -169,7 +169,7 @@ export const Recipients: React.FC = () => {
                 setOrganFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-2.5 py-1.5 text-xs text-white outline-none font-mono"
+              className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
             >
               <option value="">All Organs Needed</option>
               <option value="Kidney">Kidney</option>
@@ -189,7 +189,7 @@ export const Recipients: React.FC = () => {
 
           {/* Status Filter */}
           <div>
-            <label className="block text-[10px] font-mono text-slate-400 uppercase mb-1">
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">
               Status Filter
             </label>
             <select
@@ -198,7 +198,7 @@ export const Recipients: React.FC = () => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-2.5 py-1.5 text-xs text-white outline-none font-mono"
+              className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
             >
               <option value="">All Statuses</option>
               <option value="WAITING">Waiting</option>
@@ -217,8 +217,8 @@ export const Recipients: React.FC = () => {
 
           {(search || bloodTypeFilter || organFilter || statusFilter) && (
             <>
-              <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
-                <span className="text-slate-400 font-mono text-[11px]">
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
+                <span className="text-slate-500 text-[11px]">
                   Filtered results: {total} matching patient record(s)
                 </span>
                 <button
@@ -230,13 +230,13 @@ export const Recipients: React.FC = () => {
                     setStatusFilter('');
                     setPage(1);
                   }}
-                  className="text-xs font-mono text-cyan-400 hover:text-cyan-300"
+                  className="text-xs text-brand-ink hover:text-navy"
                 >
                   Reset Filters
                 </button>
               </div>
               {search && !isMockApiEnabled() && (
-                <div className="pt-2 border-t border-slate-800 text-[10px] font-mono text-slate-500">
+                <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-500">
                   Live search narrows records on the current page only; the backend supports
                   server-side filtering by organ, blood type, hospital, and status.
                 </div>
@@ -249,14 +249,14 @@ export const Recipients: React.FC = () => {
       {isLoading ? (
         <LoadingState message="Fetching active waitlist registries..." rows={5} />
       ) : recipients.length === 0 ? (
-        <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-xs">
-          <p className="text-xs font-mono text-slate-400 uppercase">No recipient records found</p>
+        <div className="py-12 text-center bg-white border border-slate-200 rounded-lg">
+          <p className="text-xs text-slate-500">No recipient records found</p>
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
-              <thead className="bg-slate-950 font-mono text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-50 text-[11px] font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="py-2.5 px-3">Recipient ID</th>
                   <th className="py-2.5 px-3">Patient Name</th>
@@ -269,31 +269,31 @@ export const Recipients: React.FC = () => {
                   <th className="py-2.5 px-3 text-right">Matching & Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-slate-100 ">
                 {recipients.map((recipient) => (
-                  <tr key={recipient.id} className="hover:bg-slate-850/50 transition-colors">
-                    <td className="py-2.5 px-3 font-bold text-cyan-400">{recipient.id}</td>
-                    <td className="py-2.5 px-3 text-slate-200 font-sans font-medium">
+                  <tr key={recipient.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3 font-medium text-brand-ink">{recipient.id}</td>
+                    <td className="py-2.5 px-3 text-slate-800 font-sans font-medium">
                       {recipient.name}
                       {Number.isFinite(recipient.age) && (
-                        <span className="block text-[10px] text-slate-400 font-mono">
+                        <span className="block text-[11px] text-slate-500 ">
                           Age: {recipient.age} · {recipient.gender}
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-white">{recipient.blood_type}</td>
-                    <td className="py-2.5 px-3 text-cyan-300 font-semibold">{recipient.organ_needed}</td>
+                    <td className="py-2.5 px-3 font-semibold text-slate-900">{recipient.blood_type}</td>
+                    <td className="py-2.5 px-3 text-navy font-semibold">{recipient.organ_needed}</td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
                         <span className={`font-bold tabular-nums text-sm ${
                           recipient.urgency_score >= (recipient.urgency_denominator === 10 ? 9 : 90)
-                            ? 'text-red-400'
+                            ? 'text-red-600'
                             : recipient.urgency_score >= (recipient.urgency_denominator === 10 ? 8 : 75)
-                            ? 'text-amber-400'
-                            : 'text-slate-300'
+                            ? 'text-amber-700'
+                            : 'text-slate-600'
                         }`}>
                           {recipient.urgency_score}
-                          <span className="text-[10px] text-slate-400 font-mono font-normal">
+                          <span className="text-[11px] text-slate-500 font-normal">
                             {' '}/{ recipient.urgency_denominator === 10 ? 10 : 100 }
                           </span>
                         </span>
@@ -301,7 +301,7 @@ export const Recipients: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setUrgencyRecipient(recipient)}
-                            className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 hover:text-white bg-slate-800 border border-slate-700 rounded-xs"
+                            className="px-1.5 py-0.5 text-[11px] text-slate-500 hover:text-slate-900 bg-slate-100 border border-slate-200 rounded-md"
                             title="Adjust clinical score"
                           >
                             Edit
@@ -309,21 +309,21 @@ export const Recipients: React.FC = () => {
                         </RoleGuard>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300 font-sans">
+                    <td className="py-2.5 px-3 text-slate-600 font-sans">
                       <div>{recipient.hospital_name}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{recipient.location}</div>
+                      <div className="text-[11px] text-slate-500 ">{recipient.location}</div>
                     </td>
                     <td className="py-2.5 px-3">
                       <StatusBadge status={recipient.status} />
                     </td>
-                    <td className="py-2.5 px-3 text-slate-400 text-[11px]">
+                    <td className="py-2.5 px-3 text-slate-500 text-[11px]">
                       {new Date(recipient.waiting_list_date).toLocaleDateString()}
                     </td>
                     <td className="py-2.5 px-3 text-right space-x-1.5">
                       {/* Navigate to Matching Page */}
                       <Link
                         to={`/matching/${recipient.id}`}
-                        className="inline-block px-2.5 py-1 text-[11px] font-mono font-bold bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors"
+                        className="inline-block px-2.5 py-1 text-[11px] font-medium bg-navy hover:bg-navy-dark text-white border border-transparent rounded-md transition-colors"
                       >
                         Match Donors
                       </Link>
@@ -331,7 +331,7 @@ export const Recipients: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedRecipient(recipient)}
-                        className="px-2 py-0.5 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xs"
+                        className="px-2 py-0.5 text-[11px] text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md"
                       >
                         View
                       </button>
@@ -343,7 +343,7 @@ export const Recipients: React.FC = () => {
                             setEditingRecipient(recipient);
                             setIsAddModalOpen(true);
                           }}
-                          className="px-2 py-0.5 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-xs"
+                          className="px-2 py-0.5 text-[11px] text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-md"
                         >
                           Edit
                         </button>
@@ -353,7 +353,7 @@ export const Recipients: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setRecipientToDelete(recipient)}
-                          className="px-2 py-0.5 text-[11px] font-mono text-red-300 hover:text-red-200 bg-red-950/80 hover:bg-red-900 border border-red-800 rounded-xs"
+                          className="px-2 py-0.5 text-[11px] text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md"
                         >
                           Delete
                         </button>
@@ -366,16 +366,16 @@ export const Recipients: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <div className="p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+          <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
             <div>
-              Total Waiting: <span className="text-white font-bold">{total}</span>
+              Total Waiting: <span className="text-slate-900 font-semibold">{total}</span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-2 py-1 bg-slate-900 disabled:opacity-30 border border-slate-700 rounded-xs text-white"
+                className="px-2 py-1 bg-white hover:bg-slate-50 disabled:opacity-30 border border-slate-300 rounded-md text-slate-700"
               >
                 Previous
               </button>
@@ -384,7 +384,7 @@ export const Recipients: React.FC = () => {
                 type="button"
                 disabled={recipients.length < 20}
                 onClick={() => setPage((p) => p + 1)}
-                className="px-2 py-1 bg-slate-900 disabled:opacity-30 border border-slate-700 rounded-xs text-white"
+                className="px-2 py-1 bg-white hover:bg-slate-50 disabled:opacity-30 border border-slate-300 rounded-md text-slate-700"
               >
                 Next
               </button>
@@ -417,57 +417,57 @@ export const Recipients: React.FC = () => {
 
       {/* Recipient Details Dossier Modal */}
       {selectedRecipient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xs p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-sm font-mono font-bold text-white uppercase">
+                <h3 className="text-sm font-semibold text-navy">
                   Patient File · {selectedRecipient.id}
                 </h3>
-                <p className="text-xs text-slate-400">{selectedRecipient.name}</p>
+                <p className="text-xs text-slate-500">{selectedRecipient.name}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedRecipient(null)}
-                className="text-slate-400 hover:text-white font-mono text-xs"
+                className="text-slate-400 hover:text-slate-700 text-xs"
               >
-                [ESC]
+                Close
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Organ Needed</span>
-                <span className="text-cyan-400 font-bold text-sm">{selectedRecipient.organ_needed}</span>
+            <div className="grid grid-cols-2 gap-3 text-xs ">
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Organ Needed</span>
+                <span className="text-brand-ink font-semibold text-sm">{selectedRecipient.organ_needed}</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">ABO Blood Group</span>
-                <span className="text-white font-bold text-sm">{selectedRecipient.blood_type}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">ABO Blood Group</span>
+                <span className="text-slate-900 font-semibold text-sm">{selectedRecipient.blood_type}</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Clinical Urgency</span>
-                <span className="text-red-400 font-bold text-sm">
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Clinical Urgency</span>
+                <span className="text-slate-900 font-semibold text-sm">
                   {selectedRecipient.urgency_score} / {selectedRecipient.urgency_denominator === 10 ? 10 : 100}
                 </span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Current Status</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Current Status</span>
                 <StatusBadge status={selectedRecipient.status} />
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Hospital Node</span>
-                <span className="text-slate-200 truncate block">{selectedRecipient.hospital_name}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Hospital Node</span>
+                <span className="text-slate-800 truncate block">{selectedRecipient.hospital_name}</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Waitlist Date</span>
-                <span className="text-slate-200">{new Date(selectedRecipient.waiting_list_date).toLocaleDateString()}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Waitlist Date</span>
+                <span className="text-slate-800">{new Date(selectedRecipient.waiting_list_date).toLocaleDateString()}</span>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs text-xs font-mono">
-              <span className="text-[10px] text-slate-400 uppercase block mb-1">Contact Protocol</span>
-              <div className="text-slate-300">Email: {selectedRecipient.contact_email || 'Not registered'}</div>
-              <div className="text-slate-300">Center: {selectedRecipient.location}</div>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs ">
+              <span className="text-[11px] font-medium text-slate-500 block mb-1">Contact Protocol</span>
+              <div className="text-slate-600">Email: {selectedRecipient.contact_email || 'Not registered'}</div>
+              <div className="text-slate-600">Center: {selectedRecipient.location}</div>
             </div>
 
             <div className="flex items-center justify-between pt-2">
@@ -478,14 +478,14 @@ export const Recipients: React.FC = () => {
                   setSelectedRecipient(null);
                   navigate(`/matching/${id}`);
                 }}
-                className="px-3.5 py-1.5 text-xs font-mono font-bold bg-cyan-700 hover:bg-cyan-600 text-white rounded-xs"
+                className="px-3.5 py-1.5 text-xs font-medium bg-navy hover:bg-navy-dark text-white rounded-md"
               >
                 Launch Compatibility Matcher
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedRecipient(null)}
-                className="px-4 py-1.5 text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-white rounded-xs"
+                className="px-4 py-1.5 text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md"
               >
                 Close
               </button>

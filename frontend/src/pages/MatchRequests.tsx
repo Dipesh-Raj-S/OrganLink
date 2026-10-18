@@ -107,19 +107,19 @@ export const MatchRequests: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title & Refresh */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+          <h1 className="text-lg font-semibold text-navy">
             Match Requests & Allocation Pipeline
           </h1>
-          <p className="text-xs text-slate-400 font-sans">
+          <p className="text-xs text-slate-500 font-sans">
             Formal cross-hospital match proposals awaiting clinical confirmation, multi-center coordination, and allocation.
           </p>
         </div>
         <button
           type="button"
           onClick={fetchRequests}
-          className="px-3.5 py-1.5 text-xs font-mono font-semibold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xs transition-colors shrink-0"
+          className="px-3.5 py-1.5 text-xs font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-md transition-colors shrink-0"
         >
           Refresh Queue
         </button>
@@ -127,22 +127,22 @@ export const MatchRequests: React.FC = () => {
 
       {/* 409 Conflict Alert Banner */}
       {conflictAlert && (
-        <div className="bg-red-950/80 border-2 border-red-700 p-4 rounded-xs text-red-100 flex items-start justify-between gap-4">
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-red-700 flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <div className="font-mono text-xs font-bold uppercase text-red-300">
+            <div className="text-xs font-semibold text-red-700">
               [HTTP 409 {conflictAlert.code}] Allocation Conflict Detected
             </div>
-            <p className="text-xs text-red-200 font-sans leading-relaxed">
+            <p className="text-xs text-red-700 font-sans leading-relaxed">
               {conflictAlert.message}
             </p>
-            <div className="text-[11px] font-mono text-red-300">
+            <div className="text-[11px] text-red-700">
               The matching queue and donor availability records have been automatically refreshed.
             </div>
           </div>
           <button
             type="button"
             onClick={() => setConflictAlert(null)}
-            className="text-xs font-mono text-red-300 hover:text-white uppercase shrink-0"
+            className="text-xs text-red-700 hover:text-red-800 shrink-0"
           >
             [Dismiss]
           </button>
@@ -152,13 +152,13 @@ export const MatchRequests: React.FC = () => {
       <ErrorMessage error={error} onRetry={fetchRequests} />
 
       {/* Filter Bar */}
-      <div className="bg-slate-900 border border-slate-800 p-3 rounded-xs flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+      <div className="bg-white border border-slate-200 p-3 rounded-lg flex flex-wrap items-center justify-between gap-3 text-xs ">
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 uppercase text-[11px]">Filter by Status:</span>
+          <span className="text-slate-500 text-[11px] font-medium">Filter by Status:</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-2.5 py-1 text-xs text-white outline-none"
+            className="bg-white border border-slate-300 focus:border-brand rounded-md px-2.5 py-1 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15"
           >
             <option value="">All Proposals ({total})</option>
             <option value="PENDING">Pending Approval</option>
@@ -169,7 +169,7 @@ export const MatchRequests: React.FC = () => {
           </select>
         </div>
 
-        <div className="text-slate-400 text-[11px]">
+        <div className="text-slate-500 text-[11px]">
           Showing {requests.length} of {total} request(s)
         </div>
       </div>
@@ -178,14 +178,14 @@ export const MatchRequests: React.FC = () => {
       {isLoading ? (
         <LoadingState message="Querying match request queue..." rows={4} />
       ) : requests.length === 0 ? (
-        <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-xs">
-          <p className="text-xs font-mono text-slate-400 uppercase">No match proposals found in queue</p>
+        <div className="py-12 text-center bg-white border border-slate-200 rounded-lg">
+          <p className="text-xs text-slate-500">No match proposals found in queue</p>
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
-              <thead className="bg-slate-950 font-mono text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-50 text-[11px] font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="py-2.5 px-3">Request ID</th>
                   <th className="py-2.5 px-3">Target Recipient</th>
@@ -197,41 +197,41 @@ export const MatchRequests: React.FC = () => {
                   <th className="py-2.5 px-3 text-right">Actions & Graph</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-slate-100 ">
                 {requests.map((req) => {
                   const isHighlighted = req.id === highlightId;
                   return (
                     <tr
                       key={req.id}
                       className={`transition-colors ${
-                        isHighlighted ? 'bg-cyan-950/40 border-l-2 border-cyan-400' : 'hover:bg-slate-850/50'
+                        isHighlighted ? 'bg-accent/40 border-l-2 border-brand' : 'hover:bg-slate-50'
                       }`}
                     >
-                      <td className="py-2.5 px-3 font-bold text-cyan-400">{req.id}</td>
+                      <td className="py-2.5 px-3 font-medium text-brand-ink">{req.id}</td>
                       <td className="py-2.5 px-3 font-sans">
-                        <div className="text-slate-200 font-semibold">{req.recipient_name || req.recipient_id}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">
+                        <div className="text-slate-800 font-semibold">{req.recipient_name || req.recipient_id}</div>
+                        <div className="text-[11px] text-slate-500 ">
                           ID: {req.recipient_id}
                           {req.donor_blood_type ? ` · ABO: ${req.donor_blood_type}` : ''}
                         </div>
                       </td>
                       <td className="py-2.5 px-3 font-sans">
-                        <div className="text-slate-200 font-semibold">{req.donor_name || req.donor_id}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">
+                        <div className="text-slate-800 font-semibold">{req.donor_name || req.donor_id}</div>
+                        <div className="text-[11px] text-slate-500 ">
                           ID: {req.donor_id}
                           {req.donor_organ ? ` · ${req.donor_organ}` : ''}
                         </div>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-300 font-sans">
+                      <td className="py-2.5 px-3 text-slate-600 font-sans">
                         <div>{req.requesting_hospital_name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">ID: {req.requesting_hospital_id}</div>
+                        <div className="text-[11px] text-slate-500 ">ID: {req.requesting_hospital_id}</div>
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="text-emerald-400 font-bold tabular-nums text-sm">
+                        <span className="text-emerald-700 font-bold tabular-nums text-sm">
                           {req.match_score} pts
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400 text-[11px]">
+                      <td className="py-2.5 px-3 text-slate-500 text-[11px]">
                         {new Date(req.request_date).toLocaleString()}
                       </td>
                       <td className="py-2.5 px-3">
@@ -241,7 +241,7 @@ export const MatchRequests: React.FC = () => {
                         {/* View Graph Button */}
                         <Link
                           to={`/graph/${req.id}`}
-                          className="inline-block px-2 py-1 text-[11px] font-mono text-cyan-300 hover:text-cyan-200 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800 rounded-xs transition-colors"
+                          className="inline-block px-2 py-1 text-[11px] text-brand-ink hover:text-navy bg-accent hover:bg-accent-strong border border-accent-border rounded-md transition-colors"
                         >
                           Graph
                         </Link>
@@ -249,7 +249,7 @@ export const MatchRequests: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setSelectedDetails(req)}
-                          className="px-2 py-1 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xs"
+                          className="px-2 py-1 text-[11px] text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md"
                         >
                           Details
                         </button>
@@ -260,14 +260,14 @@ export const MatchRequests: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setConfirmingRequest(req)}
-                              className="px-2.5 py-1 text-[11px] font-mono font-bold bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-700 rounded-xs transition-colors"
+                              className="px-2.5 py-1 text-[11px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 rounded-md transition-colors"
                             >
                               Confirm
                             </button>
                             <button
                               type="button"
                               onClick={() => setRejectingRequest(req)}
-                              className="px-2 py-1 text-[11px] font-mono text-red-300 hover:text-red-200 bg-red-950/80 hover:bg-red-900 border border-red-800 rounded-xs transition-colors"
+                              className="px-2 py-1 text-[11px] text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors"
                             >
                               Reject
                             </button>
@@ -297,12 +297,12 @@ export const MatchRequests: React.FC = () => {
 
       {/* Rejection Modal */}
       {rejectingRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xs p-6 space-y-4">
-            <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-navy">
               Reject Match Proposal · {rejectingRequest.id}
             </h3>
-            <p className="text-xs text-slate-300 font-sans">
+            <p className="text-xs text-slate-600 font-sans">
               Provide clinical justification for rejecting this match offer.
             </p>
             <textarea
@@ -310,13 +310,13 @@ export const MatchRequests: React.FC = () => {
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="e.g. Recipient acute infection, positive crossmatch, logistical transport window expired..."
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs p-2 text-xs text-white outline-none font-sans"
+              className="w-full bg-white border border-slate-300 focus:border-brand rounded-md p-2 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
             />
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setRejectingRequest(null)}
-                className="px-3 py-1.5 text-xs font-mono text-slate-300 hover:text-white bg-slate-800 rounded-xs"
+                className="px-3 py-1.5 text-xs text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-md"
               >
                 Cancel
               </button>
@@ -324,7 +324,7 @@ export const MatchRequests: React.FC = () => {
                 type="button"
                 disabled={isProcessing}
                 onClick={handleRejectAction}
-                className="px-3.5 py-1.5 text-xs font-mono font-bold bg-red-900 hover:bg-red-800 text-white rounded-xs"
+                className="px-3.5 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-md"
               >
                 {isProcessing ? 'Processing...' : 'Confirm Rejection'}
               </button>
@@ -335,65 +335,65 @@ export const MatchRequests: React.FC = () => {
 
       {/* Match Details Modal */}
       {selectedDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xs p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-sm font-mono font-bold text-white uppercase">
+                <h3 className="text-sm font-semibold text-navy">
                   Match Request Dossier · {selectedDetails.id}
                 </h3>
-                <p className="text-xs text-slate-400">Status: {selectedDetails.status}</p>
+                <p className="text-xs text-slate-500">Status: {selectedDetails.status}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedDetails(null)}
-                className="text-slate-400 hover:text-white font-mono text-xs"
+                className="text-slate-400 hover:text-slate-700 text-xs"
               >
-                [ESC]
+                Close
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Recipient</span>
-                <span className="text-white font-semibold">{selectedDetails.recipient_name || selectedDetails.recipient_id}</span>
-                <span className="text-[10px] text-slate-400 block">{selectedDetails.recipient_id}</span>
+            <div className="grid grid-cols-2 gap-3 text-xs ">
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Recipient</span>
+                <span className="text-slate-900 font-semibold">{selectedDetails.recipient_name || selectedDetails.recipient_id}</span>
+                <span className="text-[11px] text-slate-500 block">{selectedDetails.recipient_id}</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Donor Graft</span>
-                <span className="text-white font-semibold">{selectedDetails.donor_name || selectedDetails.donor_id}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Donor Graft</span>
+                <span className="text-slate-900 font-semibold">{selectedDetails.donor_name || selectedDetails.donor_id}</span>
                 {(selectedDetails.donor_organ || selectedDetails.donor_blood_type) && (
-                  <span className="text-[10px] text-cyan-400 block">
+                  <span className="text-[11px] text-brand-ink block">
                     {selectedDetails.donor_organ}{selectedDetails.donor_blood_type ? ` (${selectedDetails.donor_blood_type})` : ''}
                   </span>
                 )}
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Match Score</span>
-                <span className="text-emerald-400 font-bold text-sm">{selectedDetails.match_score} pts</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Match Score</span>
+                <span className="text-emerald-700 font-bold text-sm">{selectedDetails.match_score} pts</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Request Date</span>
-                <span className="text-slate-200">{new Date(selectedDetails.request_date).toLocaleString()}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Request Date</span>
+                <span className="text-slate-800">{new Date(selectedDetails.request_date).toLocaleString()}</span>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs text-xs font-mono">
-              <span className="text-[10px] text-slate-400 uppercase block mb-1">Clinical Notes & Audit Trail</span>
-              <p className="text-slate-300 font-sans leading-relaxed">{selectedDetails.notes || 'No notes filed.'}</p>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md text-xs ">
+              <span className="text-[11px] font-medium text-slate-500 block mb-1">Clinical Notes & Audit Trail</span>
+              <p className="text-slate-600 font-sans leading-relaxed">{selectedDetails.notes || 'No notes filed.'}</p>
             </div>
 
             <div className="flex items-center justify-between pt-2">
               <Link
                 to={`/graph/${selectedDetails.id}`}
-                className="px-3.5 py-1.5 text-xs font-mono font-bold bg-cyan-700 hover:bg-cyan-600 text-white rounded-xs"
+                className="px-3.5 py-1.5 text-xs font-medium bg-navy hover:bg-navy-dark text-white rounded-md"
               >
                 Inspect Relational Graph
               </Link>
               <button
                 type="button"
                 onClick={() => setSelectedDetails(null)}
-                className="px-4 py-1.5 text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-white rounded-xs"
+                className="px-4 py-1.5 text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md"
               >
                 Close
               </button>

@@ -144,8 +144,7 @@ export const GraphView: React.FC = () => {
         ctx.translate(x, y);
         ctx.scale(k, k);
 
-        // Draw subtle grid pattern
-        ctx.strokeStyle = '#111827';
+        ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
         const gridSize = 40;
         for (let gx = -width; gx < width * 2; gx += gridSize) {
@@ -173,15 +172,15 @@ export const GraphView: React.FC = () => {
             ctx.beginPath();
             ctx.moveTo(source.x, source.y);
             ctx.lineTo(target.x, target.y);
-            ctx.strokeStyle = isHovered ? '#38bdf8' : '#334155';
+            ctx.strokeStyle = isHovered ? '#3977c5' : '#cbd5e1';
             ctx.lineWidth = isHovered ? 2.5 : 1.5;
             ctx.stroke();
 
             // Edge Relationship Label
             const midX = (source.x + target.x) / 2;
             const midY = (source.y + target.y) / 2;
-            ctx.font = '9px monospace';
-            ctx.fillStyle = isHovered ? '#38bdf8' : '#64748b';
+            ctx.font = '9px sans-serif';
+            ctx.fillStyle = isHovered ? '#235187' : '#94a3b8';
             ctx.textAlign = 'center';
             ctx.fillText(edge.relationship, midX, midY - 4);
           }
@@ -193,34 +192,34 @@ export const GraphView: React.FC = () => {
           const isHovered = hoveredNodeRef.current?.id === node.id;
 
           // Node color scheme by type
-          let fill = '#0f172a';
-          let stroke = '#64748b';
+          let fill = '#ffffff';
+          let stroke = '#94a3b8';
           let badgeText = 'NODE';
 
           switch (node.type) {
             case 'DONOR':
-              stroke = '#38bdf8'; // Cyan
-              fill = '#082f49';
+              stroke = '#3977c5'; // Brand blue
+              fill = '#eaf2fc';
               badgeText = 'DONOR';
               break;
             case 'RECIPIENT':
-              stroke = '#f8fafc'; // Pure white
-              fill = '#1e293b';
+              stroke = '#173b66'; // Deep navy
+              fill = '#eaf2fc';
               badgeText = 'RECIP';
               break;
             case 'HOSPITAL':
-              stroke = '#34d399'; // Emerald
-              fill = '#064e3b';
+              stroke = '#10b981'; // Emerald
+              fill = '#ecfdf5';
               badgeText = 'HOSP';
               break;
             case 'MATCH_REQUEST':
-              stroke = '#fbbf24'; // Amber
-              fill = '#451a03';
+              stroke = '#f59e0b'; // Amber
+              fill = '#fffbeb';
               badgeText = 'MATCH';
               break;
             case 'ALLOCATION':
-              stroke = '#818cf8'; // Indigo
-              fill = '#1e1b4b';
+              stroke = '#6366f1'; // Indigo
+              fill = '#eef2ff';
               badgeText = 'ALLOC';
               break;
           }
@@ -228,15 +227,15 @@ export const GraphView: React.FC = () => {
           // Node Circle
           ctx.beginPath();
           ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-          ctx.fillStyle = fill;
+          ctx.fillStyle = isSelected ? '#ffffff' : fill;
           ctx.fill();
 
-          ctx.lineWidth = isSelected || isHovered ? 3.5 : 2;
-          ctx.strokeStyle = isSelected ? '#ffffff' : stroke;
+          ctx.lineWidth = isSelected ? 3 : isHovered ? 2.5 : 1.5;
+          ctx.strokeStyle = isSelected ? '#173b66' : stroke;
           ctx.stroke();
 
           // Type Tag Inside Node
-          ctx.font = 'bold 8px monospace';
+          ctx.font = 'bold 8px sans-serif';
           ctx.fillStyle = stroke;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -244,11 +243,11 @@ export const GraphView: React.FC = () => {
 
           // Node Label Outside
           ctx.font = '11px sans-serif';
-          ctx.fillStyle = '#f1f5f9';
+          ctx.fillStyle = '#334155';
           ctx.fillText(node.label, node.x, node.y + node.radius + 14);
 
           // ID subtitle
-          ctx.font = '9px monospace';
+          ctx.font = '9px sans-serif';
           ctx.fillStyle = '#94a3b8';
           ctx.fillText(node.id, node.x, node.y + node.radius + 25);
         }
@@ -341,17 +340,17 @@ export const GraphView: React.FC = () => {
   return (
     <div className="space-y-4 max-w-7xl mx-auto h-[calc(100vh-100px)] flex flex-col">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3 shrink-0">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+            <h1 className="text-lg font-semibold text-navy">
               Relational Graph Visualizer · Match {matchId}
             </h1>
-            <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/80 px-2 py-0.5 border border-cyan-800 rounded-xs">
+            <span className="text-[11px] text-brand-ink bg-accent px-2 py-0.5 border border-accent-border rounded-md">
               Neo4j Cypher Traversal
             </span>
           </div>
-          <p className="text-xs text-slate-400 font-sans mt-0.5">
+          <p className="text-xs text-slate-500 font-sans mt-0.5">
             Interactive topology showing donor procurement, recipient patient, hospital affiliations, match request proposal, and allocation edges.
           </p>
         </div>
@@ -360,13 +359,13 @@ export const GraphView: React.FC = () => {
           <button
             type="button"
             onClick={resetView}
-            className="px-2.5 py-1 text-xs font-mono bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded-xs"
+            className="px-2.5 py-1 text-xs bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md font-medium"
           >
             Reset View
           </button>
           <Link
             to="/match-requests"
-            className="px-3 py-1 text-xs font-mono bg-cyan-700 hover:bg-cyan-600 text-white rounded-xs"
+            className="px-3 py-1 text-xs bg-navy hover:bg-navy-dark text-white rounded-md"
           >
             Back to Queue
           </Link>
@@ -378,7 +377,7 @@ export const GraphView: React.FC = () => {
       {isLoading ? (
         <LoadingState message="Extracting Neo4j nodes and edges for match subgraph..." rows={5} />
       ) : (
-        <div className="flex-1 flex overflow-hidden border border-slate-800 rounded-xs bg-slate-950 relative">
+        <div className="flex-1 flex overflow-hidden border border-slate-200 rounded-lg bg-slate-50 relative">
           {/* Main 2D Force-Directed Canvas */}
           <div className="flex-1 h-full relative cursor-grab active:cursor-grabbing">
             <canvas
@@ -394,71 +393,71 @@ export const GraphView: React.FC = () => {
             />
 
             {/* Canvas Legend */}
-            <div className="absolute top-3 left-3 bg-slate-900/90 border border-slate-800 backdrop-blur-xs p-3 rounded-xs text-[11px] font-mono space-y-1.5 pointer-events-none">
-              <div className="text-slate-400 uppercase font-bold text-[10px] pb-1 border-b border-slate-800">
-                Network Schema
+            <div className="absolute top-3 left-3 bg-white/95 border border-slate-200 shadow-xs p-3 rounded-md text-[11px] space-y-1.5 pointer-events-none">
+              <div className="text-slate-500 font-medium text-[11px] pb-1 border-b border-slate-100">
+                Legend
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-                <span className="text-slate-200">Donor Organ Node</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-brand"></span>
+                <span className="text-slate-800">Donor Organ Node</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-white"></span>
-                <span className="text-slate-200">Recipient Patient Node</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-navy"></span>
+                <span className="text-slate-800">Recipient Patient Node</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                <span className="text-slate-200">Hospital Center Node</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <span className="text-slate-800">Hospital Center Node</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                <span className="text-slate-200">Match Request Proposal</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span className="text-slate-800">Match Request Proposal</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
-                <span className="text-slate-200">Allocation Audit Node</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                <span className="text-slate-800">Allocation Audit Node</span>
               </div>
-              <div className="text-[10px] text-slate-400 pt-1">
+              <div className="text-[11px] text-slate-500 pt-1">
                 Drag to move · Scroll to zoom
               </div>
             </div>
           </div>
 
           {/* Node Inspection Drawer */}
-          <div className="w-80 bg-slate-900 border-l border-slate-800 p-4 overflow-y-auto space-y-4 shrink-0">
-            <div className="border-b border-slate-800 pb-2">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+          <div className="w-80 bg-white border-l border-slate-200 p-4 overflow-y-auto space-y-4 shrink-0">
+            <div className="border-b border-slate-200 pb-2">
+              <div className="text-[11px] font-medium text-slate-500">
                 Graph Inspector
               </div>
-              <div className="text-xs font-mono font-bold text-white uppercase mt-0.5">
+              <div className="text-xs font-semibold text-slate-900 mt-0.5 truncate">
                 {selectedNode ? selectedNode.label : 'Select a node'}
               </div>
             </div>
 
             {selectedNode ? (
-              <div className="space-y-3 text-xs font-mono">
-                <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Node ID</span>
-                  <span className="text-cyan-400 font-bold">{selectedNode.id}</span>
+              <div className="space-y-3 text-xs ">
+                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Node ID</span>
+                  <span className="text-brand-ink font-medium">{selectedNode.id}</span>
                 </div>
 
-                <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Node Label</span>
-                  <span className="text-white font-semibold">{selectedNode.label}</span>
+                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Node Label</span>
+                  <span className="text-slate-900 font-semibold">{selectedNode.label}</span>
                 </div>
 
-                <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                  <span className="text-[10px] text-slate-400 uppercase block">Class Type</span>
-                  <span className="text-emerald-400 font-bold">{selectedNode.type}</span>
+                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 block">Class Type</span>
+                  <span className="text-slate-800 font-medium">{selectedNode.type}</span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-400 uppercase block">Property Attributes</span>
-                  <div className="bg-slate-950 p-2.5 rounded-xs border border-slate-800 space-y-1.5 text-[11px]">
+                  <span className="text-[11px] font-medium text-slate-500 block">Property Attributes</span>
+                  <div className="bg-slate-50 p-2.5 rounded-md border border-slate-100 space-y-1.5 text-[11px]">
                     {Object.entries(selectedNode.properties || {}).map(([key, val]) => (
-                      <div key={key} className="flex justify-between border-b border-slate-900 pb-1">
-                        <span className="text-slate-400 uppercase">{key}:</span>
-                        <span className="text-slate-200 font-semibold truncate max-w-[140px]">
+                      <div key={key} className="flex justify-between border-b border-slate-100 pb-1">
+                        <span className="text-slate-500">{key}:</span>
+                        <span className="text-slate-800 font-medium truncate max-w-[140px]">
                           {String(val)}
                         </span>
                       </div>
@@ -469,13 +468,13 @@ export const GraphView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedNode(null)}
-                  className="w-full py-1.5 text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xs"
+                  className="w-full py-1.5 text-xs bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md"
                 >
                   Deselect Node
                 </button>
               </div>
             ) : (
-              <div className="p-6 text-center text-xs font-mono text-slate-400">
+              <div className="p-6 text-center text-xs text-slate-500">
                 Click on any node in the canvas to inspect its Neo4j properties and relationships.
               </div>
             )}

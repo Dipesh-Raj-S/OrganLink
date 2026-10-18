@@ -38,8 +38,8 @@ export const ExpiryCountdown: React.FC<ExpiryCountdownProps> = ({ expiresAt, isE
 
   if (timeLeft.totalMs <= 0 || isExpired) {
     return (
-      <span className="font-mono text-xs text-red-400 font-bold tracking-tight inline-flex items-center gap-1">
-        <span className="w-1.5 h-1.5 bg-red-500 rounded-xs"></span>
+      <span className="text-xs text-red-600 font-semibold inline-flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
         EXPIRED
       </span>
     );
@@ -50,23 +50,23 @@ export const ExpiryCountdown: React.FC<ExpiryCountdownProps> = ({ expiresAt, isE
   const secs = String(timeLeft.seconds).padStart(2, '0');
 
   // Urgency color coding:
-  // Under 4 hours: Critical red
-  // Under 12 hours: Warning amber
-  // Over 12 hours: Normal teal/white
-  let textClass = 'text-slate-300';
-  let indicatorClass = 'bg-cyan-500';
+  // Under 4 hours: critical red
+  // Under 12 hours: warning amber
+  // Over 12 hours: normal slate
+  let textClass = 'text-slate-600';
+  let indicatorClass = 'bg-slate-400';
 
   if (timeLeft.totalMs < 4 * 60 * 60 * 1000) {
-    textClass = 'text-red-400 font-bold';
+    textClass = 'text-red-600 font-semibold';
     indicatorClass = 'bg-red-500';
   } else if (timeLeft.totalMs < 12 * 60 * 60 * 1000) {
-    textClass = 'text-amber-400 font-semibold';
+    textClass = 'text-amber-600 font-medium';
     indicatorClass = 'bg-amber-500';
   }
 
   return (
-    <div className={`font-mono text-xs tabular-nums flex items-center gap-1.5 ${textClass}`}>
-      <span className={`w-1.5 h-1.5 rounded-xs ${indicatorClass}`}></span>
+    <div className={`text-xs tabular-nums flex items-center gap-1.5 ${textClass}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${indicatorClass}`}></span>
       <span>
         {hours}h {mins}m {secs}s
       </span>

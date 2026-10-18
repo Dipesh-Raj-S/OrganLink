@@ -55,36 +55,39 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-between p-6">
-      <div className="flex items-center justify-between border-b border-slate-900 pb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-cyan-400 rounded-xs"></div>
-          <span className="font-mono text-sm font-bold text-white tracking-wider">
-            ORGAN & BLOOD DONOR-RECIPIENT MATCHING NETWORK
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent-strong via-accent to-page">
+      {/* Header */}
+      <header className="px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className="w-7 h-7 bg-navy rounded-md flex items-center justify-center">
+            <span className="w-2 h-2 bg-accent rounded-sm"></span>
           </span>
+          <div>
+            <div className="text-sm font-semibold text-navy leading-tight">OrganLink</div>
+            <div className="text-[11px] text-slate-500 leading-tight">
+              Donor–Recipient Matching Network
+            </div>
+          </div>
         </div>
-        <div className="font-mono text-xs text-slate-400">
-          CLINICAL GATEWAY · REST API v1.0
-        </div>
-      </div>
+        <div className="text-xs text-slate-500">Clinical Gateway · API v1.0</div>
+      </header>
 
-      <div className="flex items-center justify-center py-12">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xs p-8 shadow-2xl space-y-6">
+      {/* Card */}
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-8 space-y-6">
           <div className="space-y-1">
-            <h1 className="text-lg font-mono font-bold text-white uppercase tracking-wider">
-              Operator Authentication
-            </h1>
-            <p className="text-xs text-slate-400 font-sans">
-              Sign in with institutional credentials to access matching records.
+            <h1 className="text-lg font-semibold text-navy">Sign in</h1>
+            <p className="text-xs text-slate-500">
+              Use your institutional credentials to access matching records.
             </p>
           </div>
 
           <ErrorMessage error={error} />
 
-          {/* Quick Preset Selector for Demonstration */}
+          {/* Quick preset selector for demonstration */}
           <div className="space-y-2">
-            <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
-              Fast Demo Credential Profiles:
+            <div className="text-[11px] font-medium text-slate-600">
+              Demo credential profiles
             </div>
             <div className="grid grid-cols-2 gap-2">
               {(['COORDINATOR', 'DOCTOR', 'ADMIN', 'AUDITOR'] as UserRole[]).map((r) => (
@@ -92,75 +95,81 @@ export const Login: React.FC = () => {
                   key={r}
                   type="button"
                   onClick={() => applyPreset(r)}
-                  className={`px-3 py-1.5 text-xs font-mono font-semibold border rounded-xs transition-colors text-left flex items-center justify-between ${
+                  className={`px-3 py-1.5 text-xs font-medium border rounded-md transition-colors flex items-center justify-between ${
                     selectedRolePreset === r
-                      ? 'bg-cyan-950/80 border-cyan-600 text-cyan-300'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      ? 'bg-accent border-accent-border text-navy'
+                      : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'
                   }`}
                 >
                   <span>{r}</span>
-                  {selectedRolePreset === r && <span className="text-[10px] text-cyan-400">ACTIVE</span>}
+                  {selectedRolePreset === r && (
+                    <span className="w-1.5 h-1.5 bg-brand rounded-full" aria-label="Selected" />
+                  )}
                 </button>
               ))}
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <form onSubmit={handleSubmit} className="border-t border-slate-200 pt-4 space-y-4">
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label htmlFor="login-username" className="label">
                 Username / Institutional ID
               </label>
               <input
+                id="login-username"
                 type="text"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="e.g. coordinator.jenkins"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-2 text-xs text-white outline-none font-mono"
+                autoComplete="username"
+                className="input"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label htmlFor="login-password" className="label">
                 Password
               </label>
               <input
+                id="login-password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-2 text-xs text-white outline-none font-mono"
+                autoComplete="current-password"
+                className="input"
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 px-4 text-xs font-mono font-bold tracking-wider uppercase bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors flex items-center justify-center gap-2"
-            >
+            <button type="submit" disabled={isLoading} className="btn-primary w-full !py-2 text-sm">
               {isLoading && (
-                <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                <span className="w-3.5 h-3.5 border-2 border-accent-border border-t-white rounded-full animate-spin"></span>
               )}
-              <span>{isLoading ? 'Verifying Credentials...' : 'Authenticate & Enter Network'}</span>
+              <span>{isLoading ? 'Signing in...' : 'Sign in'}</span>
             </button>
           </form>
 
-          <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 font-mono space-y-1">
-            <div>Auth Endpoint: POST /api/v1/auth/login</div>
-            <div>Token Format: Authorization: Bearer &lt;access_token&gt;</div>
+          <div className="pt-1 border-t border-slate-200 text-[11px] text-slate-400 space-y-0.5">
+            <div>Auth endpoint: POST /api/v1/auth/login</div>
+            <div>Token: Authorization Bearer &lt;access_token&gt;</div>
           </div>
         </div>
-      </div>
+      </main>
 
-      <div className="border-t border-slate-900 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 font-mono">
-        <div>Clinical Data Protection Protocol · Non-Vibecoded Workstation</div>
+      {/* Footer */}
+      <footer className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div>Clinical Data Protection Protocol</div>
         <div className="flex gap-4">
-          <a href="/privacy" className="hover:text-slate-300">Privacy Policy</a>
-          <span className="text-slate-800">|</span>
-          <a href="/terms" className="hover:text-slate-300">Terms of Service</a>
+          <a href="/privacy" className="hover:text-navy">
+            Privacy Policy
+          </a>
+          <a href="/terms" className="hover:text-navy">
+            Terms of Service
+          </a>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };

@@ -1,34 +1,116 @@
 @import "tailwindcss";
 
+/* OrganLink design tokens — restrained blue/white healthcare identity.
+   Primary #173B66 (deep navy) · Secondary #3977C5 (medium blue) ·
+   Accent #EAF2FC (soft blue surface) · Page #F7F9FC (light cool gray). */
+@theme {
+  --color-navy: #173b66;
+  --color-navy-dark: #122f52;
+  --color-navy-darker: #0b2140;
+  --color-brand: #3977c5;
+  --color-brand-dark: #2c63ac;
+  --color-brand-ink: #235187;
+  --color-accent: #eaf2fc;
+  --color-accent-strong: #dce9f9;
+  --color-accent-border: #c3d9f3;
+  --color-page: #f7f9fc;
+}
+
 @layer base {
-  * {
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  }
-
   body {
-    background-color: #030712;
-    color: #f8fafc;
-    overflow-x: hidden;
+    background-color: var(--color-page);
+    color: #1e293b;
   }
 
-  /* Force Tabular Numerals across numbers and metrics */
+  /* Consistent tabular numerals for every metric */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Surgical High-Contrast Custom Scrollbar */
+  /* Quiet, light scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #020617;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 2px;
+    background: #cbd5e1;
+    border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #94a3b8;
+  }
+
+  /* Visible keyboard focus for links and buttons; inputs use ring instead */
+  a:focus-visible,
+  button:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--color-brand-dark);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+  }
+
+  ::selection {
+    background: var(--color-accent-strong);
+    color: var(--color-navy);
+  }
+}
+
+@layer components {
+  /* Panels */
+  .card {
+    @apply bg-white border border-slate-200 rounded-lg;
+  }
+
+  /* Form controls */
+  .input {
+    @apply w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 transition focus:border-brand focus:ring-2 focus:ring-brand/15 outline-none;
+  }
+  .select {
+    @apply w-full bg-white border border-slate-300 rounded-md px-2.5 py-2 text-xs text-slate-800 transition focus:border-brand focus:ring-2 focus:ring-brand/15 outline-none cursor-pointer;
+  }
+  .label {
+    @apply block text-[11px] font-medium text-slate-600 mb-1;
+  }
+  .hint {
+    @apply text-[11px] leading-snug text-slate-400;
+  }
+
+  /* Buttons — one compact standard */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-navy text-white hover:bg-navy-dark;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-red-600 text-white hover:bg-red-700;
+  }
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-accent text-brand-ink border border-accent-border hover:bg-accent-strong;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100;
+  }
+
+  /* Page typographic rhythm */
+  .page-title {
+    @apply text-lg font-semibold text-navy;
+  }
+  .page-subtitle {
+    @apply text-xs text-slate-500 mt-0.5;
+  }
+  .section-heading {
+    @apply text-sm font-semibold text-slate-800;
   }
 }

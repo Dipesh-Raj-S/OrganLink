@@ -131,18 +131,18 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-      <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xs shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <div className="border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+      <div className="w-full max-w-xl bg-white border border-slate-200 rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
+        <div className="border-b border-slate-200 pb-3 mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-navy">
             {isEditing ? `Edit Donor ${initialData?.id}` : 'Register New Donor'}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white font-mono text-xs"
+            className="text-slate-400 hover:text-slate-700 text-xs"
           >
-            [ESC]
+            Close
           </button>
         </div>
 
@@ -151,7 +151,7 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Donor Name *
               </label>
               <input
@@ -160,14 +160,14 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Legal Name"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
               />
             </div>
 
             {isMock ? (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Age *
                   </label>
                   <input
@@ -177,17 +177,17 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                     required
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Gender
                   </label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   >
                     <option value="M">Male (M)</option>
                     <option value="F">Female (F)</option>
@@ -198,7 +198,7 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Latitude (-90..90) *
                   </label>
                   <input
@@ -207,11 +207,11 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                     value={latitude}
                     onChange={(e) => setLatitude(e.target.value)}
                     placeholder="e.g. 42.3601"
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Longitude (-180..180) *
                   </label>
                   <input
@@ -220,7 +220,7 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                     value={longitude}
                     onChange={(e) => setLongitude(e.target.value)}
                     placeholder="e.g. -71.0589"
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   />
                 </div>
               </div>
@@ -229,13 +229,13 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 ABO Blood Type *
               </label>
               <select
                 value={bloodType}
                 onChange={(e) => setBloodType(e.target.value as BloodType)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
               >
                 <option value="O-">O- (Universal Donor)</option>
                 <option value="O+">O+</option>
@@ -249,13 +249,13 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Organ / Tissue Type *
               </label>
               <select
                 value={organType}
                 onChange={(e) => setOrganType(e.target.value as OrganType)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
               >
                 <option value="Kidney">Kidney (Renal)</option>
                 <option value="Liver">Liver (Hepatic)</option>
@@ -276,7 +276,7 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
           {isMock ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
                   Procurement Hospital
                 </label>
                 <input
@@ -284,11 +284,11 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                   value={hospitalName}
                   onChange={(e) => setHospitalName(e.target.value)}
                   placeholder="Hospital Name"
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
                   Location (City, State) *
                 </label>
                 <input
@@ -297,19 +297,19 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. Boston, MA"
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
                 />
               </div>
             </div>
           ) : (
-            <div className="text-[10px] text-slate-400 font-mono">
+            <div className="text-[11px] text-slate-500 ">
               The live donor registry does not record a procurement hospital or free-text
               location; the coordinates above are stored as the donor's verified location.
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">
               Viability Window (Hours) {isMock ? '' : '* (whole hours, 1-8760)'}
             </label>
             <input
@@ -321,10 +321,10 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
               disabled={isMock && isEditing}
               value={expiryHours}
               onChange={(e) => setExpiryHours(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+              className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
             />
             {isMock && isEditing && (
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="text-[11px] text-slate-500 ">
                 Mock records keep their original expiry time when edited.
               </span>
             )}
@@ -333,7 +333,7 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
           {isMock && (
             <>
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
                   HLA Tissue Typing
                 </label>
                 <input
@@ -341,12 +341,12 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                   value={hlaType}
                   onChange={(e) => setHlaType(e.target.value)}
                   placeholder="e.g. A2, B44, DR4"
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
                   Clinical & Preservation Notes
                 </label>
                 <textarea
@@ -354,25 +354,25 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                   value={medicalNotes}
                   onChange={(e) => setMedicalNotes(e.target.value)}
                   placeholder="Cold ischemic time, perfusion parameters, laboratory baselines..."
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
                 />
               </div>
             </>
           )}
 
-          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xs transition-colors"
+              className="px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-1.5 text-xs font-medium tracking-wide bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors flex items-center gap-2"
+              className="px-4 py-1.5 text-xs font-medium tracking-wide bg-navy hover:bg-navy-dark text-white border border-transparent rounded-md transition-colors flex items-center gap-2"
             >
               {isSubmitting && (
                 <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

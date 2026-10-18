@@ -5,63 +5,37 @@ interface StatusBadgeProps {
   type?: 'donor' | 'recipient' | 'request' | 'allocation' | 'blood' | 'urgency';
 }
 
+const palette: Record<string, string> = {
+  AVAILABLE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  EXACT: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+  WAITING: 'bg-amber-50 text-amber-700 border-amber-200',
+  SCHEDULED: 'bg-amber-50 text-amber-700 border-amber-200',
+  IN_TRANSIT: 'bg-amber-50 text-amber-700 border-amber-200',
+  MATCHED: 'bg-accent text-brand-ink border-accent-border',
+  CONFIRMED: 'bg-accent text-brand-ink border-accent-border',
+  COMPATIBLE: 'bg-accent text-brand-ink border-accent-border',
+  ALLOCATED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  RESERVED: 'bg-violet-50 text-violet-700 border-violet-200',
+  HIGH: 'bg-orange-50 text-orange-700 border-orange-200',
+  NORMAL: 'bg-slate-100 text-slate-600 border-slate-200',
+  EXPIRED: 'bg-rose-50 text-rose-700 border-rose-200',
+  REJECTED: 'bg-red-50 text-red-700 border-red-200',
+  CANCELLED: 'bg-red-50 text-red-700 border-red-200',
+  CONFLICT: 'bg-red-50 text-red-700 border-red-200',
+  CRITICAL: 'bg-red-50 text-red-700 border-red-200',
+};
+
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const normalized = status.toUpperCase();
-
-  // Surgical high-contrast styling: rectangular, subtle border, strictly non-pill
-  let colorClasses = 'bg-slate-900 border-slate-700 text-slate-300';
-
-  switch (normalized) {
-    case 'AVAILABLE':
-    case 'COMPLETED':
-    case 'EXACT':
-      colorClasses = 'bg-emerald-950/70 border-emerald-700/80 text-emerald-300';
-      break;
-    case 'CANCELLED':
-    case 'EXPIRED':
-    case 'REJECTED':
-    case 'CONFLICT':
-    case 'CRITICAL':
-      colorClasses = 'bg-red-950/70 border-red-700/80 text-red-300';
-      break;
-    case 'PENDING':
-    case 'WAITING':
-    case 'SCHEDULED':
-    case 'IN_TRANSIT':
-      colorClasses = 'bg-amber-950/70 border-amber-700/80 text-amber-300';
-      break;
-    case 'MATCHED':
-    case 'CONFIRMED':
-    case 'COMPATIBLE':
-      colorClasses = 'bg-cyan-950/70 border-cyan-700/80 text-cyan-300';
-      break;
-    case 'ALLOCATED':
-      colorClasses = 'bg-indigo-950/70 border-indigo-700/80 text-indigo-300';
-      break;
-    case 'RESERVED':
-      colorClasses = 'bg-violet-950/70 border-violet-700/80 text-violet-300';
-      break;
-    case 'EXPIRED':
-    case 'REJECTED':
-    case 'CONFLICT':
-    case 'CRITICAL':
-      colorClasses = 'bg-red-950/70 border-red-700/80 text-red-300';
-      break;
-    case 'HIGH':
-      colorClasses = 'bg-orange-950/70 border-orange-700/80 text-orange-300';
-      break;
-    case 'NORMAL':
-      colorClasses = 'bg-slate-900 border-slate-700 text-slate-300';
-      break;
-    default:
-      colorClasses = 'bg-slate-900 border-slate-700 text-slate-300';
-  }
+  const colorClasses = palette[normalized] ?? 'bg-slate-100 text-slate-600 border-slate-200';
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-mono tracking-wider font-semibold border rounded-xs ${colorClasses}`}
+      className={`inline-flex items-center whitespace-nowrap px-2 py-0.5 text-[11px] font-medium border rounded-md ${colorClasses}`}
     >
-      {status}
+      {normalized.replace(/_/g, ' ')}
     </span>
   );
 };

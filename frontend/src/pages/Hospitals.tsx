@@ -55,12 +55,12 @@ export const Hospitals: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title & Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+          <h1 className="text-lg font-semibold text-navy">
             Hospital Infrastructure Network
           </h1>
-          <p className="text-xs text-slate-400 font-sans">
+          <p className="text-xs text-slate-500 font-sans">
             Accredited transplant centers, regional organ procurement organizations (OPOs), and trauma hubs.
           </p>
         </div>
@@ -71,7 +71,7 @@ export const Hospitals: React.FC = () => {
               setEditingHospital(null);
               setIsAddModalOpen(true);
             }}
-            className="px-3.5 py-1.5 text-xs font-mono font-bold uppercase tracking-wider bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors shrink-0"
+            className="px-3.5 py-1.5 text-xs font-medium bg-navy hover:bg-navy-dark text-white border border-transparent rounded-md transition-colors shrink-0"
           >
             + Register Hospital Center
           </button>
@@ -83,14 +83,14 @@ export const Hospitals: React.FC = () => {
       {isLoading ? (
         <LoadingState message="Fetching accredited hospital centers..." rows={5} />
       ) : hospitals.length === 0 ? (
-        <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-xs">
-          <p className="text-xs font-mono text-slate-400 uppercase">No hospital nodes found</p>
+        <div className="py-12 text-center bg-white border border-slate-200 rounded-lg">
+          <p className="text-xs text-slate-500">No hospital nodes found</p>
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
-              <thead className="bg-slate-950 font-mono text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-50 text-[11px] font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="py-2.5 px-3">Node ID</th>
                   <th className="py-2.5 px-3">Institution Name</th>
@@ -102,38 +102,38 @@ export const Hospitals: React.FC = () => {
                   <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-slate-100 ">
                 {hospitals.map((hospital) => (
-                  <tr key={hospital.id} className="hover:bg-slate-850/50 transition-colors">
-                    <td className="py-2.5 px-3 font-bold text-cyan-400">{hospital.id}</td>
-                    <td className="py-2.5 px-3 text-slate-200 font-sans font-medium">
+                  <tr key={hospital.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3 font-medium text-brand-ink">{hospital.id}</td>
+                    <td className="py-2.5 px-3 text-slate-800 font-sans font-medium">
                       {hospital.name}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300 font-sans">
+                    <td className="py-2.5 px-3 text-slate-600 font-sans">
                       <div>{hospital.location}</div>
                       {hospital.location_coordinates && (
-                        <div className="text-[10px] text-slate-500 font-mono">
+                        <div className="text-[11px] text-slate-500 ">
                           {hospital.location_coordinates.latitude.toFixed(2)}, {hospital.location_coordinates.longitude.toFixed(2)}
                         </div>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-400 font-mono text-[11px]">
+                    <td className="py-2.5 px-3 text-slate-500 text-[11px]">
                       {hospital.tier || <span className="text-slate-600">—</span>}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300">
-                      {hospital.contact_number || <span className="text-slate-600 font-mono">—</span>}
+                    <td className="py-2.5 px-3 text-slate-600">
+                      {hospital.contact_number || <span className="text-slate-600 ">—</span>}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300 font-sans">
-                      {hospital.coordinator_name || <span className="text-slate-600 font-mono">—</span>}
+                    <td className="py-2.5 px-3 text-slate-600 font-sans">
+                      {hospital.coordinator_name || <span className="text-slate-600 ">—</span>}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-emerald-400 tabular-nums">
-                      {hospital.active_transplants != null ? `${hospital.active_transplants} cases` : <span className="text-slate-600 font-mono">—</span>}
+                    <td className="py-2.5 px-3 font-bold text-emerald-700 tabular-nums">
+                      {hospital.active_transplants != null ? `${hospital.active_transplants} cases` : <span className="text-slate-600 ">—</span>}
                     </td>
                     <td className="py-2.5 px-3 text-right space-x-1.5">
                       <button
                         type="button"
                         onClick={() => setSelectedHospital(hospital)}
-                        className="px-2 py-0.5 text-[11px] font-mono text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xs"
+                        className="px-2 py-0.5 text-[11px] text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-md"
                       >
                         View
                       </button>
@@ -145,14 +145,14 @@ export const Hospitals: React.FC = () => {
                             setEditingHospital(hospital);
                             setIsAddModalOpen(true);
                           }}
-                          className="px-2 py-0.5 text-[11px] font-mono text-cyan-300 hover:text-cyan-200 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800 rounded-xs"
+                          className="px-2 py-0.5 text-[11px] text-brand-ink hover:text-navy bg-accent hover:bg-accent-strong border border-accent-border rounded-md"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => setHospitalToDelete(hospital)}
-                          className="px-2 py-0.5 text-[11px] font-mono text-red-300 hover:text-red-200 bg-red-950/80 hover:bg-red-900 border border-red-800 rounded-xs"
+                          className="px-2 py-0.5 text-[11px] text-red-700 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md"
                         >
                           Delete
                         </button>
@@ -164,9 +164,9 @@ export const Hospitals: React.FC = () => {
             </table>
           </div>
 
-          <div className="p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+          <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
             <div>
-              Total Hospital Hubs: <span className="text-white font-bold">{total}</span>
+              Total Hospital Hubs: <span className="text-slate-900 font-semibold">{total}</span>
             </div>
             <div className="text-[11px]">Accreditation: UNOS & National Organ Transplant Act Compliant</div>
           </div>
@@ -186,40 +186,40 @@ export const Hospitals: React.FC = () => {
 
       {/* Hospital View Modal */}
       {selectedHospital && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xs p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
-                <h3 className="text-sm font-mono font-bold text-white uppercase">
+                <h3 className="text-sm font-semibold text-navy">
                   Hospital Node · {selectedHospital.id}
                 </h3>
-                <p className="text-xs text-slate-400">{selectedHospital.name}</p>
+                <p className="text-xs text-slate-500">{selectedHospital.name}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedHospital(null)}
-                className="text-slate-400 hover:text-white font-mono text-xs"
+                className="text-slate-400 hover:text-slate-700 text-xs"
               >
-                [ESC]
+                Close
               </button>
             </div>
 
-            <div className="space-y-2 text-xs font-mono">
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Location</span>
-                <span className="text-white font-semibold">{selectedHospital.location}</span>
+            <div className="space-y-2 text-xs ">
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Location</span>
+                <span className="text-slate-900 font-semibold">{selectedHospital.location}</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Accreditation Tier</span>
-                <span className="text-cyan-400 font-semibold">{selectedHospital.tier}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Accreditation Tier</span>
+                <span className="text-brand-ink font-semibold">{selectedHospital.tier}</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Emergency Dispatch</span>
-                <span className="text-white">{selectedHospital.contact_number}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Emergency Dispatch</span>
+                <span className="text-slate-900">{selectedHospital.contact_number}</span>
               </div>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
-                <span className="text-[10px] text-slate-400 uppercase block">Chief Coordinator</span>
-                <span className="text-white">{selectedHospital.coordinator_name}</span>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 block">Chief Coordinator</span>
+                <span className="text-slate-900">{selectedHospital.coordinator_name}</span>
               </div>
             </div>
 
@@ -227,7 +227,7 @@ export const Hospitals: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedHospital(null)}
-                className="px-4 py-1.5 text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-white rounded-xs"
+                className="px-4 py-1.5 text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-md"
               >
                 Close
               </button>

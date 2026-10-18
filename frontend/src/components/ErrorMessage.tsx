@@ -10,7 +10,7 @@ interface ErrorMessageProps {
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   error,
   onRetry,
-  title = 'API Operation Failed',
+  title = 'Request failed',
 }) => {
   if (!error) return null;
 
@@ -21,25 +21,26 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   const details = isApiError ? error.details : null;
 
   return (
-    <div className="border border-red-900/80 bg-red-950/40 p-4 rounded-xs text-red-200 my-4 space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className="font-mono text-xs font-bold uppercase tracking-wider text-red-400">
-            [{code}] {title} {status ? `(HTTP ${status})` : ''}
+    <div className="border border-red-200 bg-red-50 p-4 rounded-lg text-red-800 my-4 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-semibold text-red-700">
+            [{code}] {title}
+            {status ? ` (HTTP ${status})` : ''}
           </span>
         </div>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-2.5 py-1 text-xs font-mono font-medium uppercase tracking-wider bg-red-900/60 hover:bg-red-800 text-white border border-red-700/50 rounded-xs transition-colors"
+            className="btn !px-2.5 !py-1 shrink-0 bg-white text-red-700 border border-red-300 hover:bg-red-100"
           >
             Retry Request
           </button>
         )}
       </div>
-      <p className="text-xs text-red-300 font-sans leading-relaxed">{message}</p>
+      <p className="text-xs text-red-700 leading-relaxed">{message}</p>
       {details && Object.keys(details).length > 0 && (
-        <pre className="text-[10px] font-mono bg-black/50 p-2 rounded-xs border border-red-900/50 overflow-x-auto text-red-400">
+        <pre className="text-[11px] bg-white p-2 rounded-md border border-red-100 overflow-x-auto text-red-600">
           {JSON.stringify(details, null, 2)}
         </pre>
       )}

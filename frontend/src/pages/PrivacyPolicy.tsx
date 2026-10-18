@@ -4,21 +4,21 @@ import { Link } from 'react-router-dom';
 export const PrivacyPolicy: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="border-b border-slate-800 pb-4">
-        <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-1">
-          <span>GOVERNANCE & DATA PROTECTION PROTOCOL</span>
+      <div className="border-b border-slate-200 pb-4">
+        <div className="text-[11px] font-medium text-brand-ink mb-1">
+          <span>Governance &amp; Data Protection Protocol</span>
         </div>
-        <h1 className="text-xl font-mono font-bold text-white uppercase tracking-wider">
+        <h1 className="text-xl font-semibold text-navy">
           Organ & Blood Registry Privacy Policy
         </h1>
-        <p className="text-xs text-slate-400 font-sans mt-1">
+        <p className="text-xs text-slate-500 font-sans mt-1">
           Effective Date: October 2026 · Compliant with HIPAA, GDPR Health Data Standards, and NOTA Regulations.
         </p>
       </div>
 
-      <div className="space-y-6 text-xs text-slate-300 font-sans leading-relaxed">
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+      <div className="space-y-6 text-sm text-slate-600 font-sans leading-relaxed">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             1. Scope and Health Information Safeguards
           </h2>
           <p>
@@ -29,11 +29,11 @@ export const PrivacyPolicy: React.FC = () => {
           </p>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             2. Collected Clinical Data Points
           </h2>
-          <ul className="list-disc pl-5 space-y-1.5 font-mono text-[11px] text-slate-300">
+          <ul className="list-disc pl-5 space-y-1.5 text-[11px] text-slate-600">
             <li>Donor biological profiles: ABO Rh blood type, organ and tissue availability, HLA typing, and cold ischemic time.</li>
             <li>Recipient waitlist telemetry: Urgency score (MELD/PELD/CPRA), diagnosis, primary hospital node, and registration timestamp.</li>
             <li>Geographic coordinates: Institutional distance computation for transport viability window calculations.</li>
@@ -41,8 +41,8 @@ export const PrivacyPolicy: React.FC = () => {
           </ul>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             3. Auditor Data Masking Protocol
           </h2>
           <p>
@@ -52,8 +52,8 @@ export const PrivacyPolicy: React.FC = () => {
           </p>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             4. Data Retention and Institutional Security
           </h2>
           <p>
@@ -64,11 +64,11 @@ export const PrivacyPolicy: React.FC = () => {
         </section>
       </div>
 
-      <div className="pt-4 border-t border-slate-800 flex justify-between items-center text-xs font-mono">
-        <Link to="/dashboard" className="text-cyan-400 hover:text-cyan-300">
+      <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-xs ">
+        <Link to="/dashboard" className="text-brand-ink hover:text-navy">
           Return to Operations Dashboard
         </Link>
-        <span className="text-slate-400">Institutional Document ID: ODRN-PRIV-2026-A</span>
+        <span className="text-slate-500">Institutional Document ID: ODRN-PRIV-2026-A</span>
       </div>
     </div>
   );

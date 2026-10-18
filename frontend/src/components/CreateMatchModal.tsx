@@ -53,49 +53,49 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-xs shadow-2xl p-6">
-        <div className="border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+      <div className="w-full max-w-lg bg-white border border-slate-200 rounded-lg shadow-lg p-6">
+        <div className="border-b border-slate-200 pb-3 mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-navy">
             Initiate Formal Match Request
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white font-mono text-xs"
+            className="text-slate-400 hover:text-slate-700 text-xs"
           >
-            [ESC]
+            Close
           </button>
         </div>
 
         <ErrorMessage error={error} />
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+          <div className="grid grid-cols-2 gap-3 text-xs ">
             {/* Recipient Card */}
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest">Recipient Target</div>
-              <div className="text-white font-semibold text-sm truncate">{recipient.name}</div>
-              <div className="text-slate-400">ID: {recipient.id}</div>
-              <div className="text-slate-400">Organ: <span className="text-cyan-400">{recipient.organ_needed}</span></div>
-              <div className="text-slate-400">ABO: <span className="text-white font-bold">{recipient.blood_type}</span></div>
-              <div className="text-slate-400">Hospital: <span className="text-slate-300 truncate block">{recipient.hospital_name}</span></div>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md space-y-1">
+              <div className="text-[11px] font-medium text-slate-500">Recipient Target</div>
+              <div className="text-slate-900 font-semibold text-sm truncate">{recipient.name}</div>
+              <div className="text-slate-500">ID: {recipient.id}</div>
+              <div className="text-slate-500">Organ: <span className="text-brand-ink">{recipient.organ_needed}</span></div>
+              <div className="text-slate-500">ABO: <span className="text-slate-900 font-semibold">{recipient.blood_type}</span></div>
+              <div className="text-slate-500">Hospital: <span className="text-slate-600 truncate block">{recipient.hospital_name}</span></div>
             </div>
 
             {/* Candidate Donor Card */}
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest">Candidate Donor</div>
-              <div className="text-white font-semibold text-sm truncate">{candidate.donor_name}</div>
-              <div className="text-slate-400">ID: {candidate.donor_id}</div>
-              <div className="text-slate-400">Match Score: <span className="text-emerald-400 font-bold">{candidate.match_score} pts</span></div>
-              <div className="text-slate-400">ABO: <span className="text-white font-bold">{candidate.blood_type}</span>{candidate.blood_compatibility ? ` (${candidate.blood_compatibility})` : ''}</div>
-              <div className="text-slate-400">Distance: <span className="text-slate-300 font-mono">{candidate.distance_km} km</span></div>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md space-y-1">
+              <div className="text-[11px] font-medium text-slate-500">Candidate Donor</div>
+              <div className="text-slate-900 font-semibold text-sm truncate">{candidate.donor_name}</div>
+              <div className="text-slate-500">ID: {candidate.donor_id}</div>
+              <div className="text-slate-500">Match Score: <span className="text-emerald-700 font-bold">{candidate.match_score} pts</span></div>
+              <div className="text-slate-500">ABO: <span className="text-slate-900 font-semibold">{candidate.blood_type}</span>{candidate.blood_compatibility ? ` (${candidate.blood_compatibility})` : ''}</div>
+              <div className="text-slate-500">Distance: <span className="text-slate-600 ">{candidate.distance_km} km</span></div>
             </div>
           </div>
 
           {isMock ? (
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Clinical Justification & Logistics Notes
               </label>
               <textarea
@@ -103,29 +103,29 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Crossmatch preliminary negative. Emergency transport team alerted. Flight transit estimated at 55 minutes."
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
               />
             </div>
           ) : (
-            <div className="text-[10px] text-slate-400 font-mono">
+            <div className="text-[11px] text-slate-500 ">
               Live match requests persist donor and recipient identifiers only; the
               backend recomputes and stores the official match score itself.
             </div>
           )}
 
-          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xs transition-colors"
+              className="px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-1.5 text-xs font-medium tracking-wide bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors flex items-center gap-2"
+              className="px-4 py-1.5 text-xs font-medium tracking-wide bg-navy hover:bg-navy-dark text-white border border-transparent rounded-md transition-colors flex items-center gap-2"
             >
               {isSubmitting && (
                 <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

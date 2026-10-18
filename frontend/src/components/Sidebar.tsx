@@ -1,7 +1,49 @@
 import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  HeartPulse,
+  Users,
+  Building2,
+  ClipboardList,
+  Receipt,
+  ShieldCheck,
+  ScrollText,
+  RotateCcw,
+} from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../api/client';
+
+const itemBase =
+  'flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-md transition-colors';
+const itemClass = ({ isActive }: { isActive: boolean }) =>
+  `${itemBase} ${
+    isActive
+      ? 'bg-white/10 text-white font-medium'
+      : 'text-slate-300 hover:text-white hover:bg-white/5'
+  }`;
+
+const sectionLabel =
+  'px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400';
+
+interface NavItemProps {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  adminOnly?: boolean;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ to, label, icon, adminOnly }) => (
+  <NavLink to={to} className={itemClass}>
+    {icon}
+    <span className="flex-1 truncate">{label}</span>
+    {adminOnly && (
+      <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-white/10 text-slate-300">
+        Admin
+      </span>
+    )}
+  </NavLink>
+);
 
 export const Sidebar: React.FC = () => {
   const { role } = useAuth();
@@ -13,105 +55,100 @@ export const Sidebar: React.FC = () => {
     }
   };
 
-  const navItemClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center justify-between px-3.5 py-2 text-xs font-mono tracking-wide rounded-xs transition-colors ${
-      isActive
-        ? 'bg-slate-800 text-white font-semibold border-l-2 border-cyan-400 pl-3'
-        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-    }`;
+  const canSeeRegistry = role === 'ADMIN' || role === 'COORDINATOR' || role === 'DOCTOR';
 
   return (
-    <aside className="w-60 bg-slate-950 border-r border-slate-800 flex flex-col justify-between shrink-0 select-none">
-      <div className="p-4 space-y-6">
-        {/* Terminal Header */}
-        <div className="border-b border-slate-800 pb-3">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
-            Transplant Network
+    <aside className="w-56 bg-navy border-r border-navy-dark flex flex-col justify-between shrink-0 select-none">
+      <div className="p-3 space-y-5">
+        {/* Brand */}
+        <div className="px-2 pt-2 pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 bg-brand rounded-sm" aria-hidden="true"></span>
+            <span className="text-sm font-semibold text-white tracking-tight">OrganLink</span>
           </div>
-          <div className="text-xs font-semibold text-white tracking-wide mt-0.5">
-            Organ & Blood Exchange
+          <div className="mt-0.5 px-[18px] text-[11px] text-slate-400">
+            Organ &amp; Blood Exchange
           </div>
         </div>
 
-        {/* Navigation Section */}
-        <nav className="space-y-1">
-          <div className="px-3 pb-1 text-[10px] font-mono uppercase tracking-widest text-slate-400">
-            Operations
-          </div>
-
-          <NavLink to="/dashboard" className={navItemClass}>
-            <span>Dashboard</span>
-            <span className="text-[10px] text-slate-400 font-mono">01</span>
-          </NavLink>
-
-          {/* Donors: visible to ADMIN, COORDINATOR, DOCTOR */}
-          {(role === 'ADMIN' || role === 'COORDINATOR' || role === 'DOCTOR') && (
-            <NavLink to="/donors" className={navItemClass}>
-              <span>Donors</span>
-              <span className="text-[10px] text-slate-400 font-mono">02</span>
-            </NavLink>
+        {/* Operations */}
+        <nav className="space-y-0.5">
+          <div className={sectionLabel}>Operations</div>
+          <NavItem
+            to="/dashboard"
+            label="Dashboard"
+            icon={<LayoutDashboard size={16} className="text-slate-400" />}
+          />
+          {canSeeRegistry && (
+            <NavItem
+              to="/donors"
+              label="Donors"
+              icon={<HeartPulse size={16} className="text-slate-400" />}
+            />
           )}
-
-          {/* Recipients: visible to ADMIN, COORDINATOR, DOCTOR */}
-          {(role === 'ADMIN' || role === 'COORDINATOR' || role === 'DOCTOR') && (
-            <NavLink to="/recipients" className={navItemClass}>
-              <span>Recipients</span>
-              <span className="text-[10px] text-slate-400 font-mono">03</span>
-            </NavLink>
+          {canSeeRegistry && (
+            <NavItem
+              to="/recipients"
+              label="Recipients"
+              icon={<Users size={16} className="text-slate-400" />}
+            />
           )}
-
-          {/* Hospitals: visible ONLY to ADMIN as required */}
           {role === 'ADMIN' && (
-            <NavLink to="/hospitals" className={navItemClass}>
-              <span>Hospitals</span>
-              <span className="text-[10px] text-cyan-500 font-mono">ADMIN</span>
-            </NavLink>
+            <NavItem
+              to="/hospitals"
+              label="Hospitals"
+              icon={<Building2 size={16} className="text-slate-400" />}
+              adminOnly
+            />
           )}
-
-          {/* Match Requests: visible to ADMIN, COORDINATOR, DOCTOR */}
-          {(role === 'ADMIN' || role === 'COORDINATOR' || role === 'DOCTOR') && (
-            <NavLink to="/match-requests" className={navItemClass}>
-              <span>Match Requests</span>
-              <span className="text-[10px] text-slate-400 font-mono">04</span>
-            </NavLink>
+          {canSeeRegistry && (
+            <NavItem
+              to="/match-requests"
+              label="Match Requests"
+              icon={<ClipboardList size={16} className="text-slate-400" />}
+            />
           )}
-
-          {/* Allocations: visible to all roles including AUDITOR */}
-          <NavLink to="/allocations" className={navItemClass}>
-            <span>Allocation Ledger</span>
-            <span className="text-[10px] text-slate-400 font-mono">05</span>
-          </NavLink>
+          <NavItem
+            to="/allocations"
+            label="Allocation Ledger"
+            icon={<Receipt size={16} className="text-slate-400" />}
+          />
         </nav>
 
-        {/* Compliance & Policy Links */}
-        <div className="pt-2 space-y-1 border-t border-slate-900">
-          <div className="px-3 pb-1 text-[10px] font-mono uppercase tracking-widest text-slate-400">
-            Governance
-          </div>
-          <NavLink to="/privacy" className={navItemClass}>
-            <span>Privacy Policy</span>
-          </NavLink>
-          <NavLink to="/terms" className={navItemClass}>
-            <span>Terms of Use</span>
-          </NavLink>
+        {/* Governance */}
+        <div className="space-y-0.5">
+          <div className={sectionLabel}>Governance</div>
+          <NavItem
+            to="/privacy"
+            label="Privacy Policy"
+            icon={<ShieldCheck size={16} className="text-slate-400" />}
+          />
+          <NavItem
+            to="/terms"
+            label="Terms of Use"
+            icon={<ScrollText size={16} className="text-slate-400" />}
+          />
         </div>
       </div>
 
-      {/* Footer Utility */}
-      <div className="p-4 border-t border-slate-800 space-y-3">
+      {/* Footer utility */}
+      <div className="p-3 border-t border-white/10 space-y-3">
         <button
           type="button"
           onClick={handleReset}
-          className="w-full py-1.5 px-3 text-[11px] font-mono text-slate-400 hover:text-slate-200 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-xs transition-colors text-left flex items-center justify-between"
+          className="w-full flex items-center justify-between px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/5 rounded-md border border-white/10 transition-colors"
         >
-          <span>Reset Demo Store</span>
-          <span className="text-[10px] text-slate-400">DB</span>
+          <span className="flex items-center gap-2">
+            <RotateCcw size={14} className="text-slate-400" />
+            <span>Reset Demo Store</span>
+          </span>
+          <span className="text-[10px] text-slate-400">Mock DB</span>
         </button>
 
-        <div className="text-[10px] font-mono text-slate-400 flex flex-col gap-0.5">
+        <div className="px-2 text-[11px] text-slate-400 flex flex-col gap-1">
           <div>FastAPI Spec: v1.0.4</div>
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
             <span>Neo4j Graph Ready</span>
           </div>
         </div>

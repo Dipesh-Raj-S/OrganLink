@@ -4,21 +4,21 @@ import { Link } from 'react-router-dom';
 export const TermsConditions: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="border-b border-slate-800 pb-4">
-        <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-1">
-          <span>ETHICAL ALLOCATION & PROCUREMENT TERMS</span>
+      <div className="border-b border-slate-200 pb-4">
+        <div className="text-[11px] font-medium text-brand-ink mb-1">
+          <span>Ethical Allocation &amp; Procurement Terms</span>
         </div>
-        <h1 className="text-xl font-mono font-bold text-white uppercase tracking-wider">
+        <h1 className="text-xl font-semibold text-navy">
           Terms and Conditions of Network Utilization
         </h1>
-        <p className="text-xs text-slate-400 font-sans mt-1">
+        <p className="text-xs text-slate-500 font-sans mt-1">
           Governing Institutional Access to the Organ & Blood Donor-Recipient Matching Network.
         </p>
       </div>
 
-      <div className="space-y-6 text-xs text-slate-300 font-sans leading-relaxed">
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+      <div className="space-y-6 text-sm text-slate-600 font-sans leading-relaxed">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             1. Network Participation Agreement
           </h2>
           <p>
@@ -28,8 +28,8 @@ export const TermsConditions: React.FC = () => {
           </p>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             2. Deterministic Matching and Algorithmic Priority
           </h2>
           <p>
@@ -40,8 +40,8 @@ export const TermsConditions: React.FC = () => {
           </p>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             3. Allocation Commitment & Conflict Resolution
           </h2>
           <p>
@@ -52,24 +52,24 @@ export const TermsConditions: React.FC = () => {
           </p>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 p-5 rounded-xs space-y-3">
-          <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+        <section className="bg-white border border-slate-200 p-5 rounded-lg space-y-3">
+          <h2 className="text-sm font-semibold text-navy">
             4. Role-Specific Obligations
           </h2>
-          <ul className="list-disc pl-5 space-y-1.5 font-mono text-[11px] text-slate-300">
-            <li><strong className="text-white">COORDINATORS:</strong> Obligated to verify donor consent and keep viability countdowns updated.</li>
-            <li><strong className="text-white">DOCTORS:</strong> Legally accountable for verifying clinical urgency scores and MELD/PELD justifications.</li>
-            <li><strong className="text-white">ADMINISTRATORS:</strong> Responsible for credentialing hospital nodes and system integrity.</li>
-            <li><strong className="text-white">AUDITORS:</strong> Bound by non-disclosure agreements during regulatory compliance inspection.</li>
+          <ul className="list-disc pl-5 space-y-1.5 text-[11px] text-slate-600">
+            <li><strong className="text-slate-900">COORDINATORS:</strong> Obligated to verify donor consent and keep viability countdowns updated.</li>
+            <li><strong className="text-slate-900">DOCTORS:</strong> Legally accountable for verifying clinical urgency scores and MELD/PELD justifications.</li>
+            <li><strong className="text-slate-900">ADMINISTRATORS:</strong> Responsible for credentialing hospital nodes and system integrity.</li>
+            <li><strong className="text-slate-900">AUDITORS:</strong> Bound by non-disclosure agreements during regulatory compliance inspection.</li>
           </ul>
         </section>
       </div>
 
-      <div className="pt-4 border-t border-slate-800 flex justify-between items-center text-xs font-mono">
-        <Link to="/dashboard" className="text-cyan-400 hover:text-cyan-300">
+      <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-xs ">
+        <Link to="/dashboard" className="text-brand-ink hover:text-navy">
           Return to Operations Dashboard
         </Link>
-        <span className="text-slate-400">Institutional Terms Revision: 2026.4</span>
+        <span className="text-slate-500">Institutional Terms Revision: 2026.4</span>
       </div>
     </div>
   );

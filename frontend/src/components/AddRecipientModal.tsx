@@ -168,18 +168,18 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-      <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xs shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <div className="border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+      <div className="w-full max-w-xl bg-white border border-slate-200 rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
+        <div className="border-b border-slate-200 pb-3 mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-navy">
             {isEditing ? `Edit Recipient ${initialData?.id}` : 'Enroll Recipient to Waitlist'}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white font-mono text-xs"
+            className="text-slate-400 hover:text-slate-700 text-xs"
           >
-            [ESC]
+            Close
           </button>
         </div>
 
@@ -188,7 +188,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Recipient Name *
               </label>
               <input
@@ -197,14 +197,14 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Legal Name"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
               />
             </div>
 
             {isMock ? (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Age *
                   </label>
                   <input
@@ -214,17 +214,17 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                     required
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Gender
                   </label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   >
                     <option value="M">Male (M)</option>
                     <option value="F">Female (F)</option>
@@ -235,7 +235,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Latitude (-90..90) *
                   </label>
                   <input
@@ -244,11 +244,11 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                     value={latitude}
                     onChange={(e) => setLatitude(e.target.value)}
                     placeholder="e.g. 42.3601"
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
                     Longitude (-180..180) *
                   </label>
                   <input
@@ -257,7 +257,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                     value={longitude}
                     onChange={(e) => setLongitude(e.target.value)}
                     placeholder="e.g. -71.0589"
-                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                    className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                   />
                 </div>
               </div>
@@ -266,13 +266,13 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 ABO Blood Type *
               </label>
               <select
                 value={bloodType}
                 onChange={(e) => setBloodType(e.target.value as BloodType)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
               >
                 <option value="O-">O-</option>
                 <option value="O+">O+</option>
@@ -286,13 +286,13 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Organ Needed *
               </label>
               <select
                 value={organNeeded}
                 onChange={(e) => setOrganNeeded(e.target.value as OrganType)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
               >
                 <option value="Kidney">Kidney (Renal)</option>
                 <option value="Liver">Liver (Hepatic)</option>
@@ -312,7 +312,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Urgency Score (1 - {isMock ? 100 : 10}) *
               </label>
               <input
@@ -322,9 +322,9 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                 required
                 value={urgencyScore}
                 onChange={(e) => setUrgencyScore(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
               />
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="text-[11px] text-slate-500 ">
                 {(() => {
                   const score = parseInt(urgencyScore, 10);
                   if (isMock) {
@@ -345,7 +345,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
 
             {isMock ? (
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
                   Location (City, State) *
                 </label>
                 <input
@@ -354,11 +354,11 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. Boston, MA"
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
                 />
               </div>
             ) : (
-              <div className="text-[10px] text-slate-400 font-mono self-end pb-1">
+              <div className="text-[11px] text-slate-500 self-end pb-1">
                 Patient location is stored as the coordinates above (pre-filled from the
                 selected hospital until edited). No free-text city is persisted live.
               </div>
@@ -367,7 +367,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Transplant Center / Hospital {isMock ? '' : '*'}
               </label>
               {isMock ? (
@@ -376,10 +376,10 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                   value={hospitalName}
                   onChange={(e) => setHospitalName(e.target.value)}
                   placeholder="Hospital Name"
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
                 />
               ) : hospitalsError ? (
-                <div className="text-[10px] font-mono text-red-400">
+                <div className="text-[11px] text-red-600">
                   {hospitalsError} — verify the backend is running, then reopen this form.
                 </div>
               ) : (
@@ -387,7 +387,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                   required
                   value={hospitalId}
                   onChange={(e) => handleHospitalChange(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 "
                 >
                   <option value="">Select hospital…</option>
                   {hospitals.map((h) => (
@@ -400,7 +400,7 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
             </div>
             {isMock && (
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
                   Contact Email
                 </label>
                 <input
@@ -408,25 +408,25 @@ export const AddRecipientModal: React.FC<AddRecipientModalProps> = ({
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="coordinator@hospital.org"
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                  className="w-full bg-white border border-slate-300 focus:border-brand rounded-md px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-brand/15 font-sans"
                 />
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xs transition-colors"
+              className="px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-1.5 text-xs font-medium tracking-wide bg-cyan-700 hover:bg-cyan-600 text-white border border-cyan-500 rounded-xs transition-colors flex items-center gap-2"
+              className="px-4 py-1.5 text-xs font-medium tracking-wide bg-navy hover:bg-navy-dark text-white border border-transparent rounded-md transition-colors flex items-center gap-2"
             >
               {isSubmitting && (
                 <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
