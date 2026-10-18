@@ -17,6 +17,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     case 'EXACT':
       colorClasses = 'bg-emerald-950/70 border-emerald-700/80 text-emerald-300';
       break;
+    case 'CANCELLED':
+    case 'EXPIRED':
+    case 'REJECTED':
+    case 'CONFLICT':
+    case 'CRITICAL':
+      colorClasses = 'bg-red-950/70 border-red-700/80 text-red-300';
+      break;
     case 'PENDING':
     case 'WAITING':
     case 'SCHEDULED':
@@ -30,6 +37,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       break;
     case 'ALLOCATED':
       colorClasses = 'bg-indigo-950/70 border-indigo-700/80 text-indigo-300';
+      break;
+    case 'RESERVED':
+      colorClasses = 'bg-violet-950/70 border-violet-700/80 text-violet-300';
       break;
     case 'EXPIRED':
     case 'REJECTED':

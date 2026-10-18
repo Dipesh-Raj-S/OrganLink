@@ -84,6 +84,8 @@ export const Donors: React.FC = () => {
           </h1>
           <p className="text-xs text-slate-400 font-sans">
             Catalogue of deceased and living donors, real-time viability timers, and organ availability status.
+            {donors.some((d) => d.expiry_window_hours != null) &&
+              ' Viability timers are a display calculation: registration time + reported viability window.'}
           </p>
         </div>
         <RoleGuard allowed={['ADMIN', 'COORDINATOR']}>
@@ -192,6 +194,7 @@ export const Donors: React.FC = () => {
             >
               <option value="">All Statuses</option>
               <option value="AVAILABLE">Available</option>
+              <option value="RESERVED">Reserved</option>
               <option value="MATCHED">Matched</option>
               <option value="ALLOCATED">Allocated</option>
               <option value="EXPIRED">Expired</option>
@@ -251,15 +254,21 @@ export const Donors: React.FC = () => {
                     <td className="py-2.5 px-3 font-bold text-cyan-400">{donor.id}</td>
                     <td className="py-2.5 px-3 text-slate-200 font-sans font-medium">
                       {donor.name}
-                      <span className="block text-[10px] text-slate-400 font-mono">
-                        Age: {donor.age} · {donor.gender}
-                      </span>
+                      {Number.isFinite(donor.age) && (
+                        <span className="block text-[10px] text-slate-400 font-mono">
+                          Age: {donor.age} · {donor.gender}
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 font-bold text-white">{donor.blood_type}</td>
                     <td className="py-2.5 px-3 text-slate-300">{donor.organ_type}</td>
                     <td className="py-2.5 px-3 text-slate-300 font-sans">
                       <div>{donor.location}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">{donor.hospital_name}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">
+                        {donor.expiry_window_hours
+                          ? `Viability window: ${donor.expiry_window_hours}h`
+                          : donor.hospital_name || ''}
+                      </div>
                     </td>
                     <td className="py-2.5 px-3">
                       <StatusBadge status={donor.status} />
@@ -382,11 +391,13 @@ export const Donors: React.FC = () => {
               </div>
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">Hospital Affiliation</span>
-                <span className="text-slate-200 truncate block">{selectedDonorDetails.hospital_name}</span>
+                <span className="text-slate-200 truncate block">
+                  {selectedDonorDetails.hospital_name || 'Not recorded by backend'}
+                </span>
               </div>
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">HLA Tissue Typing</span>
-                <span className="text-slate-200">{selectedDonorDetails.hla_type || 'Unspecified'}</span>
+                <span className="text-slate-200">{selectedDonorDetails.hla_type || 'Not recorded by backend'}</span>
               </div>
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">Current Status</span>
@@ -394,14 +405,16 @@ export const Donors: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
-              <span className="text-[10px] text-slate-400 uppercase block font-mono mb-1">
-                Medical & Preservation Documentation
-              </span>
-              <p className="text-xs text-slate-300 font-sans leading-relaxed">
-                {selectedDonorDetails.medical_notes || 'No specific clinical notes filed for this donor.'}
-              </p>
-            </div>
+            {selectedDonorDetails.medical_notes && (
+              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
+                <span className="text-[10px] text-slate-400 uppercase block font-mono mb-1">
+                  Medical & Preservation Documentation
+                </span>
+                <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                  {selectedDonorDetails.medical_notes}
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end pt-2">
               <button

@@ -101,6 +101,14 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Step 2b: Configure the Frontend to Reach the Live API
+The React app can run against the seeded mock engine or the real FastAPI backend. For live integration, set the frontend env values in `frontend/.env.example` or a local `frontend/.env`:
+```dotenv
+VITE_API_URL=http://127.0.0.1:8000/api/v1
+VITE_USE_MOCK_API=false
+```
+The Vite dev server is configured to proxy `/api` to the backend on port `8000` so the app can authenticate directly with `/api/v1/auth/login` and `/api/v1/auth/me`.
+
 ---
 
 ## 5. Running & Seeding the Database
@@ -158,6 +166,16 @@ pytest -v
 
 ---
 
+### Phase 6: Frontend ↔ Backend Integration (Live API + Preserved Mock Engine)
+- **Adapter-Layer Integration**: The React app calls its existing legacy endpoints; a live request dispatcher in `src/api/client.ts` translates paths, payloads, and responses to the real backend contract (`src/api/adapters.ts`, with the verified enum constants in `src/api/enums.ts`). The in-browser mock engine is untouched and fully isolated.
+- **Live Auth & Session Expiry**: `POST /auth/login` with real JWTs (`VITE_API_URL` precedence → dev default `http://127.0.0.1:8000/api/v1` → prod same-origin `/api/v1`); live 401s dispatch a session-expired event that clears the session and redirects.
+- **Matching Workflows on Real Scoring**: candidate discovery (forward + reverse), match request creation (`donor_id`/`recipient_id` only), single-flight guarded allocation with a clear 409 conflict banner, and pending-only rejection (`PATCH /matches/requests/{id}/reject`, ADMIN/COORDINATOR).
+- **New Backend Endpoints**: `GET /stats/dashboard` (genuine graph aggregates incl. approaching-expiry donors), `GET /graph/matches/{id}` (real relationship subgraph), `GET /matches/donors/{id}/candidate-recipients` (reverse discovery), `PATCH /matches/requests/{match_id}/reject`.
+- **Honest Field Backwards-Compatibility**: backend-missing fields (HLA, procurement hospital, notes) render conditionally or are labeled as display calculations — no invented data, no silent rescaling (live urgency is the backend 1–10 scale; mock keeps 1–100).
+- **Verification**: frontend `tsc --noEmit` + `vite build` clean; backend `pytest` **98 passed**; a 27/27 live end-to-end workflow (auth → stats → candidates → create → allocate → idempotent repeat → reject lifecycle → graph → urgency → error envelope) against the seed baseline. See [phase-6-frontend-integration.md](file:///d:/projects/OrganLink/docs/phase-6-frontend-integration.md).
+
+--- 
+
 ## 7. API Endpoints
 
 | Method | Endpoint | Auth / Role | Description |
@@ -185,12 +203,16 @@ pytest -v
 | `PATCH` | `/api/v1/hospitals/{id}` | `ADMIN`, `COORDINATOR` | Update hospital details |
 | `DELETE` | `/api/v1/hospitals/{id}` | `ADMIN` | Delete hospital |
 | `GET` | `/api/v1/matches/recipients/{id}/candidates` | Authenticated | Discover & rank candidate donors |
+| `GET` | `/api/v1/matches/donors/{id}/candidate-recipients` | Authenticated | Reverse candidate discovery for an available donor |
 | `POST` | `/api/v1/matches/requests` | `ADMIN`, `COORDINATOR` | Create formal match request |
 | `GET` | `/api/v1/matches/requests/{id}` | Authenticated | Retrieve match request details |
 | `GET` | `/api/v1/matches/requests` | Authenticated | List match requests |
+| `PATCH` | `/api/v1/matches/requests/{id}/reject` | `ADMIN`, `COORDINATOR` | Reject a pending match request (409 on invalid transitions) |
 | `POST` | `/api/v1/matches/requests/{id}/allocate` | `ADMIN`, `COORDINATOR` | Atomic match allocation commit |
 | `GET` | `/api/v1/allocations/{id}` | Authenticated | Get allocation record |
 | `GET` | `/api/v1/allocations` | Authenticated | List allocation history |
+| `GET` | `/api/v1/graph/matches/{id}` | Authenticated | Visualization subgraph for one match request |
+| `GET` | `/api/v1/stats/dashboard` | Authenticated | Aggregated operational dashboard statistics |
 | `GET` | `/docs` | Public | Interactive Swagger UI |
 | `GET` | `/openapi.json` | Public | OpenAPI specification schema |
 

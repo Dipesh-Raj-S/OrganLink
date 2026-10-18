@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { MatchRequest, PaginatedResponse } from '../types';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -55,12 +55,13 @@ export const MatchRequests: React.FC = () => {
   }, [statusFilter]);
 
   const handleConfirmAction = async () => {
-    if (!confirmingRequest) return;
+    if (!confirmingRequest || isProcessing) return; // single-flight guard
     setIsProcessing(true);
     setError(null);
     setConflictAlert(null);
 
     try {
+      // Translated in the adapter to POST /matches/requests/{id}/allocate
       await api.post(`/match-requests/${confirmingRequest.id}/confirm`);
       setConfirmingRequest(null);
       await fetchRequests();
@@ -75,6 +76,7 @@ export const MatchRequests: React.FC = () => {
         setConfirmingRequest(null);
         await fetchRequests();
       } else {
+        // 400/401/403/(*)404/422 surface verbatim with backend code + message.
         setError(err);
       }
     } finally {
@@ -83,11 +85,12 @@ export const MatchRequests: React.FC = () => {
   };
 
   const handleRejectAction = async () => {
-    if (!rejectingRequest) return;
+    if (!rejectingRequest || isProcessing) return; // single-flight guard
     setIsProcessing(true);
     setError(null);
 
     try {
+      // Translated in the adapter to PATCH /matches/requests/{id}/reject
       await api.post(`/match-requests/${rejectingRequest.id}/reject`, {
         reason: rejectReason || 'Declined by recipient transplant center',
       });
@@ -161,6 +164,8 @@ export const MatchRequests: React.FC = () => {
             <option value="PENDING">Pending Approval</option>
             <option value="CONFIRMED">Confirmed & Allocated</option>
             <option value="REJECTED">Rejected</option>
+            {isMockApiEnabled() && <option value="CONFLICT">Conflict</option>}
+            <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
 
@@ -204,15 +209,17 @@ export const MatchRequests: React.FC = () => {
                     >
                       <td className="py-2.5 px-3 font-bold text-cyan-400">{req.id}</td>
                       <td className="py-2.5 px-3 font-sans">
-                        <div className="text-slate-200 font-semibold">{req.recipient_name}</div>
+                        <div className="text-slate-200 font-semibold">{req.recipient_name || req.recipient_id}</div>
                         <div className="text-[10px] text-slate-400 font-mono">
-                          ID: {req.recipient_id} · ABO: {req.donor_blood_type}
+                          ID: {req.recipient_id}
+                          {req.donor_blood_type ? ` · ABO: ${req.donor_blood_type}` : ''}
                         </div>
                       </td>
                       <td className="py-2.5 px-3 font-sans">
-                        <div className="text-slate-200 font-semibold">{req.donor_name}</div>
+                        <div className="text-slate-200 font-semibold">{req.donor_name || req.donor_id}</div>
                         <div className="text-[10px] text-slate-400 font-mono">
-                          ID: {req.donor_id} · {req.donor_organ}
+                          ID: {req.donor_id}
+                          {req.donor_organ ? ` · ${req.donor_organ}` : ''}
                         </div>
                       </td>
                       <td className="py-2.5 px-3 text-slate-300 font-sans">
@@ -280,7 +287,7 @@ export const MatchRequests: React.FC = () => {
       <ConfirmDialog
         isOpen={!!confirmingRequest}
         title="Confirm Formal Organ Allocation"
-        message={`Confirming match request ${confirmingRequest?.id} will commit allocation of donor ${confirmingRequest?.donor_name} (${confirmingRequest?.donor_id}) to recipient ${confirmingRequest?.recipient_name} (${confirmingRequest?.recipient_id}). The donor status will be marked as ALLOCATED and locked against other hospital claims.`}
+        message={`Confirming match request ${confirmingRequest?.id} will commit allocation of donor ${confirmingRequest?.donor_name || confirmingRequest?.donor_id} (${confirmingRequest?.donor_id}) to recipient ${confirmingRequest?.recipient_name || confirmingRequest?.recipient_id} (${confirmingRequest?.recipient_id}). The backend will create a permanent allocation record and lock the donor against other hospital claims.`}
         confirmLabel="Confirm & Allocate Organ"
         isDestructive={false}
         isLoading={isProcessing}
@@ -349,13 +356,17 @@ export const MatchRequests: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 text-xs font-mono">
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">Recipient</span>
-                <span className="text-white font-semibold">{selectedDetails.recipient_name}</span>
+                <span className="text-white font-semibold">{selectedDetails.recipient_name || selectedDetails.recipient_id}</span>
                 <span className="text-[10px] text-slate-400 block">{selectedDetails.recipient_id}</span>
               </div>
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">Donor Graft</span>
-                <span className="text-white font-semibold">{selectedDetails.donor_name}</span>
-                <span className="text-[10px] text-cyan-400 block">{selectedDetails.donor_organ} ({selectedDetails.donor_blood_type})</span>
+                <span className="text-white font-semibold">{selectedDetails.donor_name || selectedDetails.donor_id}</span>
+                {(selectedDetails.donor_organ || selectedDetails.donor_blood_type) && (
+                  <span className="text-[10px] text-cyan-400 block">
+                    {selectedDetails.donor_organ}{selectedDetails.donor_blood_type ? ` (${selectedDetails.donor_blood_type})` : ''}
+                  </span>
+                )}
               </div>
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">Match Score</span>

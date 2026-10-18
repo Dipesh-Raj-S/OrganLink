@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { Recipient, MatchCandidate, MatchRequest, PaginatedResponse, Donor } from '../types';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -108,7 +108,9 @@ export const Matching: React.FC = () => {
             Algorithmic Compatibility Matching Engine
           </h1>
           <p className="text-xs text-slate-400 font-sans">
-            Automated ranking evaluating ABO blood compatibility, organ viability decay, geographic transit distance, and HLA matching.
+            {isMockApiEnabled()
+              ? 'Automated ranking evaluating ABO blood compatibility, organ viability decay, geographic transit distance, and HLA matching.'
+              : 'Backend ranking evaluates ABO compatibility (40%), recipient clinical urgency (35%), and transit distance (25%); each candidate row shows the backend score explanation.'}
           </p>
         </div>
 
@@ -204,9 +206,11 @@ export const Matching: React.FC = () => {
                 <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
                   <span className="text-[10px] text-slate-400 uppercase block">Urgency Score</span>
                   <span className="text-red-400 font-bold text-sm block mt-0.5 tabular-nums">
-                    {recipient.urgency_score} / 100
+                    {recipient.urgency_score} / {recipient.urgency_denominator === 10 ? 10 : 100}
                   </span>
-                  <span className="text-[10px] text-red-500/80">{recipient.clinical_priority || 'Priority'}</span>
+                  <span className="text-[10px] text-red-500/80">
+                    {recipient.clinical_priority || (recipient.urgency_denominator === 10 ? 'Live scale: 1-10' : 'Priority')}
+                  </span>
                 </div>
 
                 <div className="p-3 bg-slate-950 border border-slate-800 rounded-xs">
@@ -276,7 +280,7 @@ export const Matching: React.FC = () => {
                             <span className="text-xs font-mono text-cyan-400 font-bold">
                               {cand.donor_id}
                             </span>
-                            <StatusBadge status={cand.donor_status} />
+                            {cand.donor_status && <StatusBadge status={cand.donor_status} />}
                           </div>
 
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-slate-400">
@@ -284,11 +288,14 @@ export const Matching: React.FC = () => {
                               Organ: <span className="text-slate-200 font-semibold">{cand.organ_type}</span>
                             </span>
                             <span>
-                              ABO: <span className="text-white font-bold">{cand.blood_type}</span> ({cand.blood_compatibility})
+                              ABO: <span className="text-white font-bold">{cand.blood_type}</span>
+                              {cand.blood_compatibility ? ` (${cand.blood_compatibility})` : ''}
                             </span>
-                            <span>
-                              Procurement: <span className="text-slate-300 font-sans">{cand.hospital_name}</span>
-                            </span>
+                            {cand.hospital_name && (
+                              <span>
+                                Procurement: <span className="text-slate-300 font-sans">{cand.hospital_name}</span>
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -302,15 +309,25 @@ export const Matching: React.FC = () => {
 
                         <div>
                           <span className="text-[10px] text-slate-400 uppercase block">Tissue Viability</span>
-                          <ExpiryCountdown expiresAt={cand.expires_at} />
+                          {cand.expires_at ? (
+                            <ExpiryCountdown expiresAt={cand.expires_at} />
+                          ) : (
+                            <span className="text-slate-200 font-semibold tabular-nums">
+                              {typeof cand.expiry_window_hours === 'number'
+                                ? `${cand.expiry_window_hours}h window`
+                                : '—'}
+                            </span>
+                          )}
                         </div>
 
-                        <div>
-                          <span className="text-[10px] text-slate-400 uppercase block">HLA Match</span>
-                          <span className="text-emerald-400 font-semibold tabular-nums">
-                            {cand.hla_match_score || 85}%
-                          </span>
-                        </div>
+                        {typeof cand.hla_match_score === 'number' && (
+                          <div>
+                            <span className="text-[10px] text-slate-400 uppercase block">HLA Match</span>
+                            <span className="text-emerald-400 font-semibold tabular-nums">
+                              {cand.hla_match_score}%
+                            </span>
+                          </div>
+                        )}
 
                         <div className="border-l border-slate-800 pl-3">
                           <span className="text-[10px] text-cyan-400 uppercase block font-bold">
@@ -338,6 +355,13 @@ export const Matching: React.FC = () => {
                         </RoleGuard>
                       </div>
                     </div>
+
+                    {/* Backend scoring rationale (live mode). Displayed verbatim; never fabricated. */}
+                    {cand.explanation && (
+                      <div className="mt-3 pt-2 border-t border-slate-800/60 text-[11px] text-slate-400 font-mono leading-relaxed">
+                        <span className="text-cyan-500/80 uppercase">Score explanation:</span> {cand.explanation}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -405,7 +429,13 @@ export const Matching: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 font-mono">
-                        Hospital: {r.hospital_name} · Urgency: <span className="text-red-400 font-bold">{r.urgency_score}</span>
+                        Hospital: {r.hospital_name || '—'} · Urgency:{' '}
+                        <span className="text-red-400 font-bold">
+                          {r.urgency_score}
+                          {!isMockApiEnabled() ? ' /10' : ''}
+                        </span>
+                        {typeof r.distance_km === 'number' ? ` · ${r.distance_km} km` : ''} · Match:{' '}
+                        <span className="text-emerald-400 font-bold">{r.match_score}</span>
                       </div>
                     </div>
 

@@ -109,12 +109,25 @@ export const Hospitals: React.FC = () => {
                     <td className="py-2.5 px-3 text-slate-200 font-sans font-medium">
                       {hospital.name}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300 font-sans">{hospital.location}</td>
-                    <td className="py-2.5 px-3 text-slate-400 font-mono text-[11px]">{hospital.tier}</td>
-                    <td className="py-2.5 px-3 text-slate-300">{hospital.contact_number}</td>
-                    <td className="py-2.5 px-3 text-slate-300 font-sans">{hospital.coordinator_name}</td>
+                    <td className="py-2.5 px-3 text-slate-300 font-sans">
+                      <div>{hospital.location}</div>
+                      {hospital.location_coordinates && (
+                        <div className="text-[10px] text-slate-500 font-mono">
+                          {hospital.location_coordinates.latitude.toFixed(2)}, {hospital.location_coordinates.longitude.toFixed(2)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-400 font-mono text-[11px]">
+                      {hospital.tier || <span className="text-slate-600">—</span>}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-300">
+                      {hospital.contact_number || <span className="text-slate-600 font-mono">—</span>}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-300 font-sans">
+                      {hospital.coordinator_name || <span className="text-slate-600 font-mono">—</span>}
+                    </td>
                     <td className="py-2.5 px-3 font-bold text-emerald-400 tabular-nums">
-                      {hospital.active_transplants} cases
+                      {hospital.active_transplants != null ? `${hospital.active_transplants} cases` : <span className="text-slate-600 font-mono">—</span>}
                     </td>
                     <td className="py-2.5 px-3 text-right space-x-1.5">
                       <button

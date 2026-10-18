@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { BloodType, OrganType, Donor } from '../types';
-import { api, ApiError } from '../api/client';
+import { BloodType, OrganType, Donor, LIVE_SUPPORTED_ORGANS } from '../types';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { ErrorMessage } from './ErrorMessage';
 
 interface AddDonorModalProps {
@@ -17,14 +17,25 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
   initialData,
 }) => {
   const isEditing = !!initialData;
+  // Live backend mode: forms must match the verified backend contract
+  // (DonorCreate/DonorUpdate); mock mode keeps the original legacy form.
+  const isMock = isMockApiEnabled();
   const [name, setName] = useState(initialData?.name || '');
   const [bloodType, setBloodType] = useState<BloodType>(initialData?.blood_type || 'O+');
   const [organType, setOrganType] = useState<OrganType>(initialData?.organ_type || 'Kidney');
   const [location, setLocation] = useState(initialData?.location || 'Boston, MA');
+  const [latitude, setLatitude] = useState(
+    initialData?.location_coordinates ? String(initialData.location_coordinates.latitude) : '42.3601'
+  );
+  const [longitude, setLongitude] = useState(
+    initialData?.location_coordinates ? String(initialData.location_coordinates.longitude) : '-71.0589'
+  );
   const [hospitalName, setHospitalName] = useState(initialData?.hospital_name || 'Massachusetts General Hospital');
   const [age, setAge] = useState(initialData?.age ? String(initialData.age) : '35');
   const [gender, setGender] = useState<'M' | 'F' | 'Other'>(initialData?.gender || 'M');
-  const [expiryHours, setExpiryHours] = useState('18');
+  const [expiryHours, setExpiryHours] = useState(
+    initialData?.expiry_window_hours ? String(initialData.expiry_window_hours) : '24'
+  );
   const [hlaType, setHlaType] = useState(initialData?.hla_type || 'A2, B44, DR4');
   const [medicalNotes, setMedicalNotes] = useState(initialData?.medical_notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,9 +52,39 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
       return;
     }
     const parsedAge = parseInt(age, 10);
-    if (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 110) {
+    if (isMock && (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 110)) {
       setError(new Error('Valid donor age is required (0-110)'));
       return;
+    }
+
+    let coordinates: { latitude: number; longitude: number } | undefined;
+    if (!isMock) {
+      const lat = Number(latitude);
+      const lng = Number(longitude);
+      if (
+        latitude.trim() === '' ||
+        longitude.trim() === '' ||
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng) ||
+        lat < -90 ||
+        lat > 90 ||
+        lng < -180 ||
+        lng > 180
+      ) {
+        setError(new Error('Valid coordinates are required (latitude -90..90, longitude -180..180)'));
+        return;
+      }
+      coordinates = { latitude: lat, longitude: lng };
+      // Backend DonorBase: expiry_window_hours int ge=1 le=8760 (verified).
+      const windowHours = Number(expiryHours);
+      if (
+        !Number.isInteger(windowHours) ||
+        windowHours < 1 ||
+        windowHours > 8760
+      ) {
+        setError(new Error('Viability window must be a whole number of hours (1-8760)'));
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -52,7 +93,8 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
         ? initialData.expires_at
         : new Date(Date.now() + parseFloat(expiryHours) * 3600 * 1000).toISOString();
 
-      const payload = {
+      // Legacy view-model payload (mock engine consumes this shape directly).
+      const payload: Record<string, unknown> = {
         name: name.trim(),
         blood_type: bloodType,
         organ_type: organType,
@@ -66,6 +108,11 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
         medical_notes: medicalNotes.trim(),
         status: initialData?.status || 'AVAILABLE',
       };
+      if (!isMock && coordinates) {
+        payload.location_coordinates = coordinates;
+        payload.expiry_window_hours = Math.round(parseFloat(expiryHours));
+        delete payload.expires_at;
+      }
 
       let result: Donor;
       if (isEditing && initialData) {
@@ -117,36 +164,67 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                  Age *
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="110"
-                  required
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
-                />
+            {isMock ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                    Age *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="110"
+                    required
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                    Gender
+                  </label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value as any)}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                  >
+                    <option value="M">Male (M)</option>
+                    <option value="F">Female (F)</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                  Gender
-                </label>
-                <select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
-                >
-                  <option value="M">Male (M)</option>
-                  <option value="F">Female (F)</option>
-                  <option value="Other">Other</option>
-                </select>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                    Latitude (-90..90) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                    placeholder="e.g. 42.3601"
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                    Longitude (-180..180) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                    placeholder="e.g. -71.0589"
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -184,85 +262,103 @@ export const AddDonorModal: React.FC<AddDonorModalProps> = ({
                 <option value="Heart">Heart (Cardiac)</option>
                 <option value="Lung">Lung (Pulmonary)</option>
                 <option value="Pancreas">Pancreas</option>
-                <option value="Cornea">Cornea (Ocular)</option>
-                <option value="Whole Blood">Whole Blood (Packed RBC)</option>
-                <option value="Platelets">Platelets (Apheresis)</option>
+                {isMock && (
+                  <>
+                    <option value="Cornea">Cornea (Ocular)</option>
+                    <option value="Whole Blood">Whole Blood (Packed RBC)</option>
+                    <option value="Platelets">Platelets (Apheresis)</option>
+                  </>
+                )}
               </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                Procurement Hospital
-              </label>
-              <input
-                type="text"
-                value={hospitalName}
-                onChange={(e) => setHospitalName(e.target.value)}
-                placeholder="Hospital Name"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                Location (City, State) *
-              </label>
-              <input
-                type="text"
-                required
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Boston, MA"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {!isEditing && (
+          {isMock ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                  Viability Window (Hours) *
+                  Procurement Hospital
                 </label>
                 <input
-                  type="number"
-                  step="0.5"
-                  min="1"
-                  max="720"
-                  required
-                  value={expiryHours}
-                  onChange={(e) => setExpiryHours(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                  type="text"
+                  value={hospitalName}
+                  onChange={(e) => setHospitalName(e.target.value)}
+                  placeholder="Hospital Name"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
                 />
               </div>
-            )}
-            <div className={isEditing ? 'col-span-2' : ''}>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                HLA Tissue Typing
-              </label>
-              <input
-                type="text"
-                value={hlaType}
-                onChange={(e) => setHlaType(e.target.value)}
-                placeholder="e.g. A2, B44, DR4"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
-              />
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Location (City, State) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Boston, MA"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-[10px] text-slate-400 font-mono">
+              The live donor registry does not record a procurement hospital or free-text
+              location; the coordinates above are stored as the donor's verified location.
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-              Clinical & Preservation Notes
+              Viability Window (Hours) {isMock ? '' : '* (whole hours, 1-8760)'}
             </label>
-            <textarea
-              rows={3}
-              value={medicalNotes}
-              onChange={(e) => setMedicalNotes(e.target.value)}
-              placeholder="Cold ischemic time, perfusion parameters, laboratory baselines..."
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+            <input
+              type="number"
+              step={isMock ? '0.5' : '1'}
+              min="1"
+              max={isMock ? '720' : '8760'}
+              required={!isMock || !isEditing}
+              disabled={isMock && isEditing}
+              value={expiryHours}
+              onChange={(e) => setExpiryHours(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
             />
+            {isMock && isEditing && (
+              <span className="text-[10px] text-slate-400 font-mono">
+                Mock records keep their original expiry time when edited.
+              </span>
+            )}
           </div>
+
+          {isMock && (
+            <>
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  HLA Tissue Typing
+                </label>
+                <input
+                  type="text"
+                  value={hlaType}
+                  onChange={(e) => setHlaType(e.target.value)}
+                  placeholder="e.g. A2, B44, DR4"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Clinical & Preservation Notes
+                </label>
+                <textarea
+                  rows={3}
+                  value={medicalNotes}
+                  onChange={(e) => setMedicalNotes(e.target.value)}
+                  placeholder="Cold ischemic time, perfusion parameters, laboratory baselines..."
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
             <button

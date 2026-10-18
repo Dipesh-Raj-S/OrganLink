@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { Recipient, PaginatedResponse } from '../types';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -177,9 +177,13 @@ export const Recipients: React.FC = () => {
               <option value="Heart">Heart</option>
               <option value="Lung">Lung</option>
               <option value="Pancreas">Pancreas</option>
-              <option value="Cornea">Cornea</option>
-              <option value="Whole Blood">Whole Blood</option>
-              <option value="Platelets">Platelets</option>
+              {isMockApiEnabled() && (
+                <>
+                  <option value="Cornea">Cornea</option>
+                  <option value="Whole Blood">Whole Blood</option>
+                  <option value="Platelets">Platelets</option>
+                </>
+              )}
             </select>
           </div>
 
@@ -198,34 +202,48 @@ export const Recipients: React.FC = () => {
             >
               <option value="">All Statuses</option>
               <option value="WAITING">Waiting</option>
-              <option value="MATCHED">Matched</option>
-              <option value="TRANSPLANTED">Transplanted</option>
-              <option value="INACTIVE">Inactive</option>
+              {isMockApiEnabled() ? (
+                <>
+                  <option value="MATCHED">Matched</option>
+                  <option value="TRANSPLANTED">Transplanted</option>
+                  <option value="INACTIVE">Inactive</option>
+                </>
+              ) : (
+                <option value="ALLOCATED">Allocated</option>
+              )}
             </select>
           </div>
         </div>
 
-        {(search || bloodTypeFilter || organFilter || statusFilter) && (
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
-            <span className="text-slate-400 font-mono text-[11px]">
-              Filtered results: {total} matching patient record(s)
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setSearch('');
-                setBloodTypeFilter('');
-                setOrganFilter('');
-                setStatusFilter('');
-                setPage(1);
-              }}
-              className="text-xs font-mono text-cyan-400 hover:text-cyan-300"
-            >
-              Reset Filters
-            </button>
-          </div>
-        )}
-      </div>
+          {(search || bloodTypeFilter || organFilter || statusFilter) && (
+            <>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
+                <span className="text-slate-400 font-mono text-[11px]">
+                  Filtered results: {total} matching patient record(s)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    setBloodTypeFilter('');
+                    setOrganFilter('');
+                    setStatusFilter('');
+                    setPage(1);
+                  }}
+                  className="text-xs font-mono text-cyan-400 hover:text-cyan-300"
+                >
+                  Reset Filters
+                </button>
+              </div>
+              {search && !isMockApiEnabled() && (
+                <div className="pt-2 border-t border-slate-800 text-[10px] font-mono text-slate-500">
+                  Live search narrows records on the current page only; the backend supports
+                  server-side filtering by organ, blood type, hospital, and status.
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
       {/* Table */}
       {isLoading ? (
@@ -257,18 +275,27 @@ export const Recipients: React.FC = () => {
                     <td className="py-2.5 px-3 font-bold text-cyan-400">{recipient.id}</td>
                     <td className="py-2.5 px-3 text-slate-200 font-sans font-medium">
                       {recipient.name}
-                      <span className="block text-[10px] text-slate-400 font-mono">
-                        Age: {recipient.age} · {recipient.gender}
-                      </span>
+                      {Number.isFinite(recipient.age) && (
+                        <span className="block text-[10px] text-slate-400 font-mono">
+                          Age: {recipient.age} · {recipient.gender}
+                        </span>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 font-bold text-white">{recipient.blood_type}</td>
                     <td className="py-2.5 px-3 text-cyan-300 font-semibold">{recipient.organ_needed}</td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
                         <span className={`font-bold tabular-nums text-sm ${
-                          recipient.urgency_score >= 90 ? 'text-red-400' : recipient.urgency_score >= 75 ? 'text-amber-400' : 'text-slate-300'
+                          recipient.urgency_score >= (recipient.urgency_denominator === 10 ? 9 : 90)
+                            ? 'text-red-400'
+                            : recipient.urgency_score >= (recipient.urgency_denominator === 10 ? 8 : 75)
+                            ? 'text-amber-400'
+                            : 'text-slate-300'
                         }`}>
                           {recipient.urgency_score}
+                          <span className="text-[10px] text-slate-400 font-mono font-normal">
+                            {' '}/{ recipient.urgency_denominator === 10 ? 10 : 100 }
+                          </span>
                         </span>
                         <RoleGuard allowed={['DOCTOR', 'ADMIN']}>
                           <button
@@ -419,7 +446,9 @@ export const Recipients: React.FC = () => {
               </div>
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">Clinical Urgency</span>
-                <span className="text-red-400 font-bold text-sm">{selectedRecipient.urgency_score} / 100</span>
+                <span className="text-red-400 font-bold text-sm">
+                  {selectedRecipient.urgency_score} / {selectedRecipient.urgency_denominator === 10 ? 10 : 100}
+                </span>
               </div>
               <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xs">
                 <span className="text-[10px] text-slate-400 uppercase block">Current Status</span>

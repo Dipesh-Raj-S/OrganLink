@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Hospital } from '../types';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { ErrorMessage } from './ErrorMessage';
 
 interface AddHospitalModalProps {
@@ -17,8 +17,17 @@ export const AddHospitalModal: React.FC<AddHospitalModalProps> = ({
   initialData,
 }) => {
   const isEditing = !!initialData;
+  // Live backend HospitalCreate/Update accepts only name + coordinate location
+  // (verified); mock keeps the full legacy form.
+  const isMock = isMockApiEnabled();
   const [name, setName] = useState(initialData?.name || '');
   const [location, setLocation] = useState(initialData?.location || '');
+  const [latitude, setLatitude] = useState(
+    initialData?.location_coordinates ? String(initialData.location_coordinates.latitude) : ''
+  );
+  const [longitude, setLongitude] = useState(
+    initialData?.location_coordinates ? String(initialData.location_coordinates.longitude) : ''
+  );
   const [tier, setTier] = useState(initialData?.tier || 'Level 1 Trauma & Transplant Center');
   const [contactNumber, setContactNumber] = useState(initialData?.contact_number || '');
   const [coordinatorName, setCoordinatorName] = useState(initialData?.coordinator_name || '');
@@ -35,20 +44,44 @@ export const AddHospitalModal: React.FC<AddHospitalModalProps> = ({
       setError(new Error('Hospital institution name is required'));
       return;
     }
-    if (!location.trim()) {
+    if (isMock && !location.trim()) {
       setError(new Error('Location is required'));
       return;
     }
 
+    let coordinates: { latitude: number; longitude: number } | undefined;
+    if (!isMock) {
+      const lat = Number(latitude);
+      const lng = Number(longitude);
+      if (
+        latitude.trim() === '' ||
+        longitude.trim() === '' ||
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng) ||
+        lat < -90 ||
+        lat > 90 ||
+        lng < -180 ||
+        lng > 180
+      ) {
+        setError(new Error('Valid coordinates are required (latitude -90..90, longitude -180..180)'));
+        return;
+      }
+      coordinates = { latitude: lat, longitude: lng };
+    }
+
     setIsSubmitting(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         name: name.trim(),
-        location: location.trim(),
-        tier: tier.trim(),
-        contact_number: contactNumber.trim(),
-        coordinator_name: coordinatorName.trim(),
+        location: isMock ? location.trim() : '',
       };
+      if (isMock) {
+        payload.tier = tier.trim();
+        payload.contact_number = contactNumber.trim();
+        payload.coordinator_name = coordinatorName.trim();
+      } else if (coordinates) {
+        payload.location_coordinates = coordinates;
+      }
 
       let result: Hospital;
       if (isEditing && initialData) {
@@ -99,63 +132,103 @@ export const AddHospitalModal: React.FC<AddHospitalModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                Location (City, State) *
-              </label>
-              <input
-                type="text"
-                required
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Palo Alto, CA"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
-              />
+          {isMock ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Location (City, State) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Palo Alto, CA"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Contact Phone
+                </label>
+                <input
+                  type="text"
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)}
+                  placeholder="+1 (650) 723-4000"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                Contact Phone
-              </label>
-              <input
-                type="text"
-                value={contactNumber}
-                onChange={(e) => setContactNumber(e.target.value)}
-                placeholder="+1 (650) 723-4000"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
-              />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Latitude (-90..90) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={latitude}
+                  onChange={(e) => setLatitude(e.target.value)}
+                  placeholder="e.g. 37.4316"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Longitude (-180..180) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={longitude}
+                  onChange={(e) => setLongitude(e.target.value)}
+                  placeholder="e.g. -122.1350"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                Accreditation Tier
-              </label>
-              <select
-                value={tier}
-                onChange={(e) => setTier(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
-              >
-                <option value="Level 1 Trauma & Transplant Center">Level 1 Trauma & Transplant Center</option>
-                <option value="Comprehensive Organ Transplant Center">Comprehensive Organ Transplant Center</option>
-                <option value="Academic Medical & Transplant Hub">Academic Medical & Transplant Hub</option>
-                <option value="Regional Organ Procurement Institute">Regional Organ Procurement Institute</option>
-              </select>
+          {isMock && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Accreditation Tier
+                </label>
+                <select
+                  value={tier}
+                  onChange={(e) => setTier(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-mono"
+                >
+                  <option value="Level 1 Trauma & Transplant Center">Level 1 Trauma & Transplant Center</option>
+                  <option value="Comprehensive Organ Transplant Center">Comprehensive Organ Transplant Center</option>
+                  <option value="Academic Medical & Transplant Hub">Academic Medical & Transplant Hub</option>
+                  <option value="Regional Organ Procurement Institute">Regional Organ Procurement Institute</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                  Chief Transplant Coordinator
+                </label>
+                <input
+                  type="text"
+                  value={coordinatorName}
+                  onChange={(e) => setCoordinatorName(e.target.value)}
+                  placeholder="Dr. Coordinator Name"
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-                Chief Transplant Coordinator
-              </label>
-              <input
-                type="text"
-                value={coordinatorName}
-                onChange={(e) => setCoordinatorName(e.target.value)}
-                placeholder="Dr. Coordinator Name"
-                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
-              />
+          )}
+          {!isMock && (
+            <div className="text-[10px] text-slate-400 font-mono">
+              The live hospital registry stores the institution name and geographic
+              coordinates only. Accreditation tier, contact, and coordinator fields are
+              mock-engine properties and are not sent.
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
             <button

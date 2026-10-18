@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Recipient, MatchCandidate, MatchRequest } from '../types';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { ErrorMessage } from './ErrorMessage';
 
 interface CreateMatchModalProps {
@@ -21,6 +21,7 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<Error | ApiError | null>(null);
+  const isMock = isMockApiEnabled();
 
   if (!isOpen || !candidate) return null;
 
@@ -30,11 +31,17 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Live backend MatchRequestCreate accepts donor_id/recipient_id only —
+      // scores are computed by the backend; notes are a mock-engine field.
       const match = await api.post<MatchRequest>('/match-requests', {
         recipient_id: recipient.id,
         donor_id: candidate.donor_id,
-        match_score: candidate.match_score,
-        notes: notes || `Direct match request initiated by ${recipient.hospital_name}`,
+        ...(isMock
+          ? {
+              match_score: candidate.match_score,
+              notes: notes || `Direct match request initiated`,
+            }
+          : {}),
       });
       onSuccess(match);
       onClose();
@@ -81,23 +88,30 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({
               <div className="text-white font-semibold text-sm truncate">{candidate.donor_name}</div>
               <div className="text-slate-400">ID: {candidate.donor_id}</div>
               <div className="text-slate-400">Match Score: <span className="text-emerald-400 font-bold">{candidate.match_score} pts</span></div>
-              <div className="text-slate-400">ABO: <span className="text-white font-bold">{candidate.blood_type}</span> ({candidate.blood_compatibility})</div>
+              <div className="text-slate-400">ABO: <span className="text-white font-bold">{candidate.blood_type}</span>{candidate.blood_compatibility ? ` (${candidate.blood_compatibility})` : ''}</div>
               <div className="text-slate-400">Distance: <span className="text-slate-300 font-mono">{candidate.distance_km} km</span></div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-              Clinical Justification & Logistics Notes
-            </label>
-            <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Crossmatch preliminary negative. Emergency transport team alerted. Flight transit estimated at 55 minutes."
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
-            />
-          </div>
+          {isMock ? (
+            <div>
+              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                Clinical Justification & Logistics Notes
+              </label>
+              <textarea
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Crossmatch preliminary negative. Emergency transport team alerted. Flight transit estimated at 55 minutes."
+                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+              />
+            </div>
+          ) : (
+            <div className="text-[10px] text-slate-400 font-mono">
+              Live match requests persist donor and recipient identifiers only; the
+              backend recomputes and stores the official match score itself.
+            </div>
+          )}
 
           <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
             <button

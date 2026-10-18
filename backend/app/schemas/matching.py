@@ -63,6 +63,38 @@ class MatchRequestCreate(BaseModel):
     )
 
 
+class MatchRequestRejectRequest(BaseModel):
+    reason: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Optional rejection reason recorded on the MatchRequest for audit.",
+    )
+
+
+class ReverseCandidateRecipientResponse(BaseModel):
+    recipient_id: str
+    name: str
+    blood_type: BloodTypeEnum
+    organ_needed: OrganTypeEnum
+    urgency_score: int = Field(..., ge=1, le=10)
+    hospital_id: str
+    distance_km: float = Field(..., description="Haversine transit distance donor -> recipient hospital")
+    score: float = Field(..., ge=0.0, le=100.0, description="Backend-computed rank score (0.0 - 100.0)")
+    explanation: MatchExplanation
+    eligible: bool = Field(default=True)
+
+
+class ReverseCandidateListResponse(BaseModel):
+    donor_id: str
+    donor_name: str
+    organ_type: OrganTypeEnum
+    donor_blood_type: BloodTypeEnum
+    items: List[ReverseCandidateRecipientResponse] = Field(default_factory=list)
+    total: int
+    page: int
+    page_size: int
+
+
 class MatchRequestResponse(BaseModel):
     match_id: str
     match_score: float

@@ -10,7 +10,9 @@ from app.schemas.enums import MatchRequestStatusEnum, UserRoleEnum
 from app.schemas.matching import (
     CandidateListResponse,
     MatchRequestCreate,
+    MatchRequestRejectRequest,
     MatchRequestResponse,
+    ReverseCandidateListResponse,
 )
 from app.services.matching_service import MatchingService
 
@@ -40,6 +42,28 @@ async def get_candidate_donors(
     current_user: UserResponse = Depends(get_current_user),
 ) -> CandidateListResponse:
     return await service.get_candidate_donors(recipient_id=recipient_id, page=page, page_size=page_size)
+
+
+@router.get(
+    "/donors/{donor_id}/candidate-recipients",
+    response_model=ReverseCandidateListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Find candidate recipients for an available donor",
+    description=(
+        "Reverse candidate discovery (Phase 6): lists Waiting recipients who "
+        "qualify for an Available donor's organ, reusing the same eligibility "
+        "traversal and scoring engine as forward matching. Accessible by all "
+        "authenticated roles."
+    ),
+)
+async def get_candidate_recipients(
+    donor_id: str,
+    page: int = Query(default=1, ge=1, description="Page number (1-indexed)"),
+    page_size: int = Query(default=20, ge=1, le=100, description="Items per page (max 100)"),
+    service: MatchingService = Depends(get_matching_service),
+    current_user: UserResponse = Depends(get_current_user),
+) -> ReverseCandidateListResponse:
+    return await service.get_candidate_recipients(donor_id=donor_id, page=page, page_size=page_size)
 
 
 @router.post(
@@ -98,3 +122,24 @@ async def list_match_requests(
         page_size=page_size,
     )
     return PaginatedResponse[MatchRequestResponse](**result)
+
+
+@router.patch(
+    "/requests/{match_id}/reject",
+    response_model=MatchRequestResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Reject a pending match request",
+    description=(
+        "Rejects a Pending match request without creating an allocation and "
+        "without modifying donor or recipient state. Only Pending requests can "
+        "be rejected; invalid transitions return a structured 409 conflict. "
+        "Requires ADMIN or COORDINATOR role."
+    ),
+)
+async def reject_match_request(
+    match_id: str,
+    payload: MatchRequestRejectRequest,
+    service: MatchingService = Depends(get_matching_service),
+    current_user: UserResponse = Depends(require_role(UserRoleEnum.ADMIN, UserRoleEnum.COORDINATOR)),
+) -> MatchRequestResponse:
+    return await service.reject_match_request(match_id=match_id, payload=payload)

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Recipient } from '../types';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { ErrorMessage } from './ErrorMessage';
 
 interface UpdateUrgencyModalProps {
@@ -16,7 +16,13 @@ export const UpdateUrgencyModal: React.FC<UpdateUrgencyModalProps> = ({
   recipient,
   onSuccess,
 }) => {
-  const [urgencyScore, setUrgencyScore] = useState<number>(recipient?.urgency_score || 80);
+  // Scale is explicit per mode: live backend scores 1-10 (verified in
+  // RecipientUrgencyUpdate), the mock engine keeps its legacy 1-100 scale.
+  const isMock = isMockApiEnabled();
+  const maxScore = isMock ? 100 : 10;
+  const [urgencyScore, setUrgencyScore] = useState<number>(
+    Math.min(recipient?.urgency_score || (isMock ? 80 : 5), maxScore)
+  );
   const [clinicalReason, setClinicalReason] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<Error | ApiError | null>(null);
@@ -27,17 +33,19 @@ export const UpdateUrgencyModal: React.FC<UpdateUrgencyModalProps> = ({
     e.preventDefault();
     setError(null);
 
-    if (urgencyScore < 1 || urgencyScore > 100) {
-      setError(new Error('Urgency score must be between 1 and 100'));
+    if (urgencyScore < 1 || urgencyScore > maxScore) {
+      setError(new Error(`Urgency score must be a whole number between 1 and ${maxScore}`));
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const updated = await api.patch<Recipient>(`/recipients/${recipient.id}/urgency`, {
-        urgency_score: urgencyScore,
-        clinical_reason: clinicalReason,
-      });
+      // clinical_reason is a mock-engine field; the live RecipientUrgencyUpdate
+      // schema accepts urgency_score only, so it is not sent in live mode.
+      const body = isMock
+        ? { urgency_score: urgencyScore, clinical_reason: clinicalReason }
+        : { urgency_score: urgencyScore };
+      const updated = await api.patch<Recipient>(`/recipients/${recipient.id}/urgency`, body);
       onSuccess(updated);
       onClose();
     } catch (err: any) {
@@ -48,8 +56,14 @@ export const UpdateUrgencyModal: React.FC<UpdateUrgencyModalProps> = ({
   };
 
   const getPriorityLabel = (score: number) => {
-    if (score >= 90) return { label: 'CRITICAL (Immediate allocation required)', color: 'text-red-400' };
-    if (score >= 75) return { label: 'HIGH (Urgent transplant priority)', color: 'text-amber-400' };
+    if (isMock) {
+      if (score >= 90) return { label: 'CRITICAL (Immediate allocation required)', color: 'text-red-400' };
+      if (score >= 75) return { label: 'HIGH (Urgent transplant priority)', color: 'text-amber-400' };
+      return { label: 'NORMAL (Standard waitlist status)', color: 'text-slate-300' };
+    }
+    // Live 1-10 thresholds (matching AddRecipientModal priority bands).
+    if (score >= 9) return { label: 'CRITICAL (Immediate allocation required)', color: 'text-red-400' };
+    if (score >= 8) return { label: 'HIGH (Urgent transplant priority)', color: 'text-amber-400' };
     return { label: 'NORMAL (Standard waitlist status)', color: 'text-slate-300' };
   };
 
@@ -90,14 +104,14 @@ export const UpdateUrgencyModal: React.FC<UpdateUrgencyModalProps> = ({
             </div>
             <div className="flex justify-between text-slate-400">
               <span>Current Score:</span>
-              <span className="text-cyan-400 font-bold tabular-nums">{recipient.urgency_score} / 100</span>
+              <span className="text-cyan-400 font-bold tabular-nums">{recipient.urgency_score} / {maxScore}</span>
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-mono text-slate-300 uppercase">
-                New Urgency Score (1 - 100)
+                New Urgency Score (1 - {maxScore})
               </label>
               <span className="text-sm font-mono font-bold text-cyan-400 tabular-nums">
                 {urgencyScore}
@@ -106,7 +120,8 @@ export const UpdateUrgencyModal: React.FC<UpdateUrgencyModalProps> = ({
             <input
               type="range"
               min="1"
-              max="100"
+              max={maxScore}
+              step="1"
               value={urgencyScore}
               onChange={(e) => setUrgencyScore(parseInt(e.target.value, 10))}
               className="w-full accent-cyan-500 cursor-pointer"
@@ -116,19 +131,21 @@ export const UpdateUrgencyModal: React.FC<UpdateUrgencyModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
-              Physician Rationale / MELD-PELD Updates *
-            </label>
-            <textarea
-              required
-              rows={3}
-              value={clinicalReason}
-              onChange={(e) => setClinicalReason(e.target.value)}
-              placeholder="e.g. Acute decompensation, ICU admission with inotropic support, laboratory creatinine escalation..."
-              className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
-            />
-          </div>
+          {isMock && (
+            <div>
+              <label className="block text-xs font-mono text-slate-300 uppercase mb-1">
+                Physician Rationale / MELD-PELD Updates *
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={clinicalReason}
+                onChange={(e) => setClinicalReason(e.target.value)}
+                placeholder="e.g. Acute decompensation, ICU admission with inotropic support, laboratory creatinine escalation..."
+                className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xs px-3 py-1.5 text-xs text-white outline-none font-sans"
+              />
+            </div>
+          )}
 
           <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
             <button

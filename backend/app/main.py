@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from app.core.config import get_settings
 from app.core.db import db
 from app.core.exceptions import AppException
-from app.routers import allocations, auth, donors, hospitals, matching, recipients
+from app.routers import allocations, auth, donors, graph, hospitals, matching, recipients, stats
 
 
 # Configure logging
@@ -162,6 +162,8 @@ def create_app() -> FastAPI:
     app.include_router(hospitals.router, prefix=settings.API_PREFIX)
     app.include_router(matching.router, prefix=settings.API_PREFIX)
     app.include_router(allocations.router, prefix=settings.API_PREFIX)
+    app.include_router(stats.router, prefix=settings.API_PREFIX)
+    app.include_router(graph.router, prefix=settings.API_PREFIX)
 
 
     # Register root endpoint

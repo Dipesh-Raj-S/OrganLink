@@ -14,7 +14,10 @@ from app.schemas.matching import (
     CandidateListResponse,
     MatchExplanation,
     MatchRequestCreate,
+    MatchRequestRejectRequest,
     MatchRequestResponse,
+    ReverseCandidateListResponse,
+    ReverseCandidateRecipientResponse,
     ScoreFactorBreakdown,
 )
 from app.services.scorer import MatchScorer
@@ -242,3 +245,136 @@ class MatchingService:
             "page": result["page"],
             "page_size": result["page_size"],
         }
+
+    async def get_candidate_recipients(
+        self,
+        donor_id: str,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> ReverseCandidateListResponse:
+        """
+        Reverse candidate discovery for a donor (Phase 6).
+        Reuses the same eligibility traversal and the same MatchScorer instance
+        (weights + factors) as forward matching — no second scoring engine.
+        - Verifies donor exists and is Available (mirrors forward-matching gating).
+        - Finds Waiting recipients needing the donor's organ with compatible blood.
+        - Ranks them by descending score with recipient_id as stable tie-breaker.
+        - Applies pagination.
+        """
+        donor = await self.donor_repo.get_by_id(donor_id)
+        if not donor:
+            raise NotFoundException(
+                message=f"Donor with ID '{donor_id}' not found.",
+                code="DONOR_NOT_FOUND",
+            )
+
+        if donor["status"] != "Available":
+            raise BadRequestException(
+                message=f"Donor '{donor_id}' is not available for reverse candidate discovery (current status: '{donor['status']}').",
+                code="DONOR_NOT_AVAILABLE",
+            )
+
+        raw_candidates = await self.repo.find_candidate_recipients_for_donor(donor_id)
+
+        donor_loc = donor["location"]
+        scored: List[ReverseCandidateRecipientResponse] = []
+
+        for cand in raw_candidates:
+            distance_km = MatchScorer.haversine_distance_km(
+                donor_loc["latitude"],
+                donor_loc["longitude"],
+                cand["location"]["latitude"],
+                cand["location"]["longitude"],
+            )
+
+            score, breakdown = MatchScorer.calculate_score(
+                donor_blood_type=donor["blood_type"],
+                recipient_blood_type=cand["blood_type"],
+                urgency_score=cand["urgency_score"],
+                distance_km=distance_km,
+            )
+
+            explanation = MatchExplanation(
+                summary=breakdown["summary"],
+                factors=ScoreFactorBreakdown(
+                    blood_compatibility_score=breakdown["blood_compatibility_score"],
+                    urgency_score_component=breakdown["urgency_score_component"],
+                    distance_score_component=breakdown["distance_score_component"],
+                    distance_km=breakdown["distance_km"],
+                    weights=breakdown["weights"],
+                ),
+            )
+
+            scored.append(
+                ReverseCandidateRecipientResponse(
+                    recipient_id=cand["recipient_id"],
+                    name=cand["name"],
+                    blood_type=cand["blood_type"],
+                    organ_needed=cand["organ_needed"],
+                    urgency_score=cand["urgency_score"],
+                    hospital_id=cand["hospital_id"],
+                    distance_km=distance_km,
+                    score=score,
+                    eligible=True,
+                    explanation=explanation,
+                )
+            )
+
+        scored.sort(key=lambda c: (-c.score, c.recipient_id))
+
+        total = len(scored)
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        paged_items = scored[start_idx:end_idx]
+
+        return ReverseCandidateListResponse(
+            donor_id=donor["donor_id"],
+            donor_name=donor["name"],
+            organ_type=donor["organ_type"],
+            donor_blood_type=donor["blood_type"],
+            items=paged_items,
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def reject_match_request(
+        self,
+        match_id: str,
+        payload: MatchRequestRejectRequest,
+    ) -> MatchRequestResponse:
+        """
+        Rejects a Pending MatchRequest (Phase 6 extension).
+        - Only Pending requests can be rejected; any other state yields a
+          structured 409 INVALID_MATCH_STATUS (including repeated rejection).
+        - Restricts the mutation to the MatchRequest node itself: no allocation
+          is created and no donor/recipient graph state is altered.
+        - Stores the optional audit reason on the node.
+        """
+        record = await self.repo.get_match_request(match_id)
+        if not record:
+            raise NotFoundException(
+                message=f"MatchRequest with ID '{match_id}' not found.",
+                code="MATCH_REQUEST_NOT_FOUND",
+            )
+
+        if record["status"] != MatchRequestStatusEnum.PENDING.value:
+            raise ConflictException(
+                message=(
+                    f"MatchRequest '{match_id}' has status '{record['status']}' and cannot be "
+                    f"rejected. Only Pending requests can be rejected."
+                ),
+                code="INVALID_MATCH_STATUS",
+            )
+
+        updated = await self.repo.update_match_request_status(
+            match_id=match_id,
+            new_status=MatchRequestStatusEnum.REJECTED.value,
+            reject_reason=payload.reason,
+        )
+        if not updated:
+            raise NotFoundException(
+                message=f"MatchRequest with ID '{match_id}' not found.",
+                code="MATCH_REQUEST_NOT_FOUND",
+            )
+        return MatchRequestResponse(**updated)

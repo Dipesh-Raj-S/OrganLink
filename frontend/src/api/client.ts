@@ -18,6 +18,35 @@ import {
   UserSession,
   UserRole,
 } from '../types';
+import {
+  BackendAllocation,
+  BackendCandidateList,
+  BackendDonor,
+  BackendHospital,
+  BackendMatchGraph,
+  BackendMatchRequest,
+  BackendRecipient,
+  BackendReverseCandidateList,
+  BackendTokenResponse,
+  BackendUserResponse,
+  LookupProvider,
+  backendAllocationToFrontend,
+  backendCandidateToFrontend,
+  backendDonorToFrontend,
+  backendHospitalToFrontend,
+  backendMatchRequestToFrontend,
+  backendRecipientToFrontend,
+  frontendDonorToBackendCreate,
+  frontendDonorToBackendUpdate,
+  frontendHospitalToBackendCreate,
+  frontendHospitalToBackendUpdate,
+  frontendMatchRequestToBackendCreate,
+  frontendRecipientToBackendCreate,
+  frontendRecipientToBackendUpdate,
+  uiDonorStatusToBackend,
+  uiMatchRequestStatusToBackend,
+  uiRecipientStatusToBackend,
+} from './adapters';
 
 export class ApiError extends Error {
   code: string;
@@ -33,13 +62,40 @@ export class ApiError extends Error {
   }
 }
 
-// Configurable live API URL and mode flag
-const LIVE_BASE_URL = (import.meta as any).env?.VITE_API_URL || '/api/v1';
+// Configurable live API URL and mode flag.
+// Resolution order (explicit, single source of truth):
+//   1. VITE_API_URL (authoritative; /api/v1 suffix normalized to exactly once)
+//   2.Development fallback: local FastAPI server
+//   3. Production default: same-origin /api/v1 (reverse-proxy deployed)
+function resolveLiveBaseUrl(): string {
+  const env = (import.meta as any).env || {};
+  const configured = env.VITE_API_URL;
+  if (configured && String(configured).trim()) {
+    const trimmed = String(configured).trim().replace(/\/+$/, '');
+    // Apply the /api/v<N> prefix exactly once.
+    return /\/api\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
+  }
+  if (env.DEV) {
+    return 'http://127.0.0.1:8000/api/v1';
+  }
+  return '/api/v1';
+}
+
+export const LIVE_BASE_URL = resolveLiveBaseUrl();
+
 const USE_MOCK_STORAGE_KEY = 'organ_network_use_mock_api';
+
+function getDefaultMockMode(): boolean {
+  const envValue = (import.meta as any).env?.VITE_USE_MOCK_API;
+  if (envValue === undefined) {
+    return false;
+  }
+  return envValue === 'true';
+}
 
 export function isMockApiEnabled(): boolean {
   const val = localStorage.getItem(USE_MOCK_STORAGE_KEY);
-  return val === null ? true : val === 'true'; // Defaults to true for out-of-the-box working demo
+  return val === null ? getDefaultMockMode() : val === 'true';
 }
 
 export function setMockApiEnabled(enabled: boolean): void {
@@ -51,8 +107,12 @@ export function setMockApiEnabled(enabled: boolean): void {
 const TOKEN_KEY = 'organ_network_access_token';
 const SESSION_KEY = 'organ_network_user_session';
 
+/** Fired when the live backend rejects the stored bearer token with HTTP 401. */
+export const SESSION_EXPIRED_EVENT = 'organ_network_session_expired';
+
 export function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  const token = localStorage.getItem(TOKEN_KEY);
+  return token;
 }
 
 export function getStoredSession(): UserSession | null {
@@ -66,6 +126,9 @@ export function getStoredSession(): UserSession | null {
 }
 
 export function storeSession(session: UserSession): void {
+  if (!session?.access_token) {
+    throw new Error('Cannot persist a session without an access token.');
+  }
   localStorage.setItem(TOKEN_KEY, session.access_token);
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
@@ -75,9 +138,528 @@ export function clearSession(): void {
   localStorage.removeItem(SESSION_KEY);
 }
 
-// Simulated network latency for realism
+// Simulated network latency for realism (mock engine only)
 function delay(ms = 220): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// ---------------------------------------------------------------------------
+// LIVE API LAYER
+// ---------------------------------------------------------------------------
+
+/** Raw authenticated live fetch without view-model adaptation. */
+async function rawLiveRequest<T>(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
+  body?: unknown,
+  params?: Record<string, string | number | undefined>
+): Promise<T> {
+  let url = `${LIVE_BASE_URL}${endpoint}`;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== '') searchParams.append(k, String(v));
+    });
+    const qs = searchParams.toString();
+    if (qs) url += `?${qs}`;
+  }
+
+  const headers: Record<string, string> = {};
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const token = getStoredToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch (err: any) {
+    throw new ApiError(
+      0,
+      'NETWORK_ERROR',
+      err?.message || `Failed to connect to the FastAPI server at ${LIVE_BASE_URL}`
+    );
+  }
+
+  if (!response.ok) {
+    let errData: any = {};
+    let parseFailed = false;
+    try {
+      errData = await response.json();
+    } catch {
+      parseFailed = true;
+    }
+    const code = errData?.error?.code || (parseFailed ? `HTTP_${response.status}` : `HTTP_${response.status}`);
+    const message =
+      errData?.error?.message ||
+      response.statusText ||
+      'An API error occurred.';
+    throw new ApiError(response.status, code, message, errData?.error?.details);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new ApiError(
+      502,
+      'MALFORMED_RESPONSE',
+      'The backend returned a malformed (non-JSON) response body.'
+    );
+  }
+}
+
+/** Translates a live 401 into a controlled session-expiry signal. */
+function handleLiveAuthRejection(endpoint: string, err: ApiError): void {
+  if (err.status === 401 && !endpoint.startsWith('/auth/')) {
+    window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+  }
+}
+
+// Name/identifier lookups for enrichment (real list endpoints only, cached once)
+const lookups = new LookupProvider({
+  rawGet: <U,>(
+    endpoint: string,
+    params?: Record<string, string | number | undefined>
+  ): Promise<U> => rawLiveRequest<U>(endpoint, 'GET', undefined, params),
+});
+
+function paginatedEnvelope<T>(items: T[], total: number, page: number, page_size: number): PaginatedResponse<T> {
+  return { items, total, page, page_size };
+}
+
+/**
+ * Live request dispatcher.
+ * Translates the canonical frontend endpoint into the verified backend route,
+ * maps payloads into backend schemas, and maps backend responses into the
+ * frontend view model. Mock mode never reaches this code path.
+ */
+async function liveRequest<T>(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  body?: any,
+  params?: Record<string, string | number | undefined>
+): Promise<T> {
+  try {
+    // ---------------------------- Auth ----------------------------
+    if (endpoint === '/auth/login' && method === 'POST') {
+      // Backend accepts JSON {username, password} -> TokenResponse.
+      return (await rawLiveRequest<BackendTokenResponse>('/auth/login', method, body)) as unknown as T;
+    }
+
+    if (endpoint === '/auth/me' && method === 'GET') {
+      return (await rawLiveRequest<BackendUserResponse>('/auth/me', 'GET')) as unknown as T;
+    }
+
+    // ---------------------------- Donors ----------------------------
+    if (endpoint === '/donors' && method === 'GET') {
+      const res = await rawLiveRequest<{ items: BackendDonor[]; total: number; page: number; page_size: number }>(
+        '/donors',
+        'GET',
+        undefined,
+        {
+          status: params?.status ? uiDonorStatusToBackend(String(params.status)) : undefined,
+          organ_type: params?.organ_type ? String(params.organ_type) : undefined,
+          blood_type: params?.blood_type ? String(params.blood_type) : undefined,
+          page: params?.page,
+          page_size: params?.page_size,
+        }
+      );
+      let items = res.items.map((d) => backendDonorToFrontend(d));
+      // Backend has no server-side name search; filter within the retrieved page.
+      if (params?.search) {
+        const q = String(params.search).toLowerCase();
+        items = items.filter(
+          (d) =>
+            d.name.toLowerCase().includes(q) ||
+            d.id.toLowerCase().includes(q) ||
+            d.location.toLowerCase().includes(q)
+        );
+      }
+      return paginatedEnvelope(items, res.total, res.page, res.page_size) as unknown as T;
+    }
+
+    if (endpoint === '/donors' && method === 'POST') {
+      const payload = frontendDonorToBackendCreate(body, false);
+      const created = await rawLiveRequest<BackendDonor>('/donors', 'POST', payload);
+      return backendDonorToFrontend(created) as unknown as T;
+    }
+
+    const donorIdMatch = endpoint.match(/^\/donors\/([^/]+)(\/.*)?$/);
+    if (donorIdMatch && !donorIdMatch[2]) {
+      const donorId = donorIdMatch[1];
+      if (method === 'GET') {
+        const d = await rawLiveRequest<BackendDonor>(`/donors/${encodeURIComponent(donorId)}`, 'GET');
+        return backendDonorToFrontend(d) as unknown as T;
+      }
+      if (method === 'PATCH') {
+        const payload = frontendDonorToBackendUpdate(body, false);
+        const updated = await rawLiveRequest<BackendDonor>(
+          `/donors/${encodeURIComponent(donorId)}`,
+          'PATCH',
+          payload
+        );
+        return backendDonorToFrontend(updated) as unknown as T;
+      }
+      if (method === 'DELETE') {
+        await rawLiveRequest<void>(`/donors/${encodeURIComponent(donorId)}`, 'DELETE');
+        return { success: true, message: `Donor ${donorId} deleted` } as unknown as T;
+      }
+    }
+
+    // Reverse discovery: WIP backend extension /matches/donors/{id}/candidate-recipients
+    if (donorIdMatch && donorIdMatch[2] === '/candidates' && method === 'GET') {
+      const donorId = donorIdMatch[1];
+      const res = await rawLiveRequest<BackendReverseCandidateList>(
+        `/matches/donors/${encodeURIComponent(donorId)}/candidate-recipients`,
+        'GET',
+        undefined,
+        { page: params?.page, page_size: params?.page_size }
+      );
+      // Enrich hospital names from the hospitals list (real data).
+      const items: Array<Record<string, unknown>> = [];
+      for (const item of res.items) {
+        const hospitalName = await lookups.hospitalName(item.hospital_id as string);
+        items.push({
+          recipient_id: item.recipient_id,
+          recipient_name: item.name,
+          blood_type: item.blood_type,
+          urgency_score: item.urgency_score,
+          hospital_id: item.hospital_id,
+          hospital_name: hospitalName,
+          distance_km: item.distance_km,
+          match_score: item.score,
+        });
+      }
+      return paginatedEnvelope(items, res.total, res.page, res.page_size) as unknown as T;
+    }
+
+    // ---------------------------- Recipients ----------------------------
+    if (endpoint === '/recipients' && method === 'GET') {
+      const res = await rawLiveRequest<{ items: BackendRecipient[]; total: number; page: number; page_size: number }>(
+        '/recipients',
+        'GET',
+        undefined,
+        {
+          organ_needed: params?.organ_needed ? String(params.organ_needed) : undefined,
+          blood_type: params?.blood_type ? String(params.blood_type) : undefined,
+          hospital_id: params?.hospital_id ? String(params.hospital_id) : undefined,
+          status: params?.status ? uiRecipientStatusToBackend(String(params.status)) : undefined,
+          page: params?.page,
+          page_size: params?.page_size,
+        }
+      );
+      // Enrich hospital names (hospitals list is small; one cached call).
+      const items: Recipient[] = [];
+      for (const r of res.items) {
+        const hospitalName = await lookups.hospitalName(r.hospital_id);
+        items.push(backendRecipientToFrontend(r, hospitalName));
+      }
+      if (params?.search) {
+        const q = String(params.search).toLowerCase();
+        const filtered = items.filter(
+          (r) =>
+            r.name.toLowerCase().includes(q) ||
+            r.id.toLowerCase().includes(q) ||
+            (r.hospital_name || '').toLowerCase().includes(q)
+        );
+        // Keep the server-defined total; search narrows only the visible page.
+        return { items: filtered, total: res.total, page: res.page, page_size: res.page_size } as unknown as T;
+      }
+      return paginatedEnvelope(items, res.total, res.page, res.page_size) as unknown as T;
+    }
+
+    if (endpoint === '/recipients' && method === 'POST') {
+      const payload = frontendRecipientToBackendCreate(body, false);
+      const created = await rawLiveRequest<BackendRecipient>('/recipients', 'POST', payload);
+      const hospitalName = await lookups.hospitalName(created.hospital_id);
+      return backendRecipientToFrontend(created, hospitalName) as unknown as T;
+    }
+
+    const recipientIdMatch = endpoint.match(/^\/recipients\/([^/]+)(\/.*)?$/);
+    if (recipientIdMatch && recipientIdMatch[2] === '/urgency' && method === 'PATCH') {
+      const recipientId = recipientIdMatch[1];
+      // The live backend expects urgency_score as an integer 1-10.
+      const updated = await rawLiveRequest<BackendRecipient>(
+        `/recipients/${encodeURIComponent(recipientId)}/urgency`,
+        'PATCH',
+        { urgency_score: body?.urgency_score }
+      );
+      const hospitalName = await lookups.hospitalName(updated.hospital_id);
+      return backendRecipientToFrontend(updated, hospitalName) as unknown as T;
+    }
+
+    if (recipientIdMatch && recipientIdMatch[2] === '/candidates' && method === 'GET') {
+      // Backend route: GET /matches/recipients/{id}/candidates
+      const recipientId = recipientIdMatch[1];
+      const res = await rawLiveRequest<BackendCandidateList>(
+        `/matches/recipients/${encodeURIComponent(recipientId)}/candidates`,
+        'GET',
+        undefined,
+        { page: params?.page, page_size: params?.page_size }
+      );
+      const candidates = res.items.map((c) => backendCandidateToFrontend(c));
+      return paginatedEnvelope(candidates, res.total, res.page, res.page_size) as unknown as T;
+    }
+
+    if (recipientIdMatch && !recipientIdMatch[2]) {
+      const recipientId = recipientIdMatch[1];
+      if (method === 'GET') {
+        const r = await rawLiveRequest<BackendRecipient>(
+          `/recipients/${encodeURIComponent(recipientId)}`,
+          'GET'
+        );
+        const hospitalName = await lookups.hospitalName(r.hospital_id);
+        return backendRecipientToFrontend(r, hospitalName) as unknown as T;
+      }
+      if (method === 'PATCH') {
+        const payload = frontendRecipientToBackendUpdate(body, false);
+        const updated = await rawLiveRequest<BackendRecipient>(
+          `/recipients/${encodeURIComponent(recipientId)}`,
+          'PATCH',
+          payload
+        );
+        const hospitalName = await lookups.hospitalName(updated.hospital_id);
+        return backendRecipientToFrontend(updated, hospitalName) as unknown as T;
+      }
+      if (method === 'DELETE') {
+        await rawLiveRequest<void>(`/recipients/${encodeURIComponent(recipientId)}`, 'DELETE');
+        return { success: true, message: `Recipient ${recipientId} removed` } as unknown as T;
+      }
+    }
+
+    // ---------------------------- Hospitals ----------------------------
+    if (endpoint === '/hospitals' && method === 'GET') {
+      const res = await rawLiveRequest<{ items: BackendHospital[]; total: number; page: number; page_size: number }>(
+        '/hospitals',
+        'GET',
+        undefined,
+        { name: params?.search ? String(params.search) : undefined, page: params?.page, page_size: params?.page_size }
+      );
+      return paginatedEnvelope(
+        res.items.map((h) => backendHospitalToFrontend(h)),
+        res.total,
+        res.page,
+        res.page_size
+      ) as unknown as T;
+    }
+
+    if (endpoint === '/hospitals' && method === 'POST') {
+      const payload = frontendHospitalToBackendCreate(body, false);
+      const created = await rawLiveRequest<BackendHospital>('/hospitals', 'POST', payload);
+      return backendHospitalToFrontend(created) as unknown as T;
+    }
+
+    const hospitalIdMatch = endpoint.match(/^\/hospitals\/([^/]+)$/);
+    if (hospitalIdMatch) {
+      const hospitalId = hospitalIdMatch[1];
+      if (method === 'GET') {
+        const h = await rawLiveRequest<BackendHospital>(
+          `/hospitals/${encodeURIComponent(hospitalId)}`,
+          'GET'
+        );
+        return backendHospitalToFrontend(h) as unknown as T;
+      }
+      if (method === 'PATCH') {
+        const payload = frontendHospitalToBackendUpdate(body, false);
+        const updated = await rawLiveRequest<BackendHospital>(
+          `/hospitals/${encodeURIComponent(hospitalId)}`,
+          'PATCH',
+          payload
+        );
+        return backendHospitalToFrontend(updated) as unknown as T;
+      }
+      if (method === 'DELETE') {
+        await rawLiveRequest<void>(`/hospitals/${encodeURIComponent(hospitalId)}`, 'DELETE');
+        return { success: true, message: `Hospital ${hospitalId} deleted` } as unknown as T;
+      }
+    }
+
+    // ---------------------------- Match requests ----------------------------
+    if (endpoint === '/match-requests' && method === 'POST') {
+      const payload = frontendMatchRequestToBackendCreate(body, false);
+      const created = await rawLiveRequest<BackendMatchRequest>('/matches/requests', 'POST', payload);
+      // Enrichment from real endpoints (donor names / hospital names).
+      const donor = await lookups.donorById(created.donor_id);
+      const hospitalName = await lookups.hospitalName(created.hospital_id);
+      const mapped = backendMatchRequestToFrontend(created, donor, hospitalName);
+      const recipient = await lookups.recipientById(created.recipient_id);
+      if (recipient) {
+        mapped.recipient_name = recipient.name;
+      }
+      return mapped as unknown as T;
+    }
+
+    if (endpoint === '/match-requests' && method === 'GET') {
+      const res = await rawLiveRequest<{ items: BackendMatchRequest[]; total: number; page: number; page_size: number }>(
+        '/matches/requests',
+        'GET',
+        undefined,
+        {
+          status: params?.status ? uiMatchRequestStatusToBackend(String(params.status)) : undefined,
+          recipient_id: params?.recipient_id ? String(params.recipient_id) : undefined,
+          page: params?.page,
+          page_size: params?.page_size,
+        }
+      );
+      const items: MatchRequest[] = [];
+      for (const m of res.items) {
+        const donor = await lookups.donorById(m.donor_id);
+        const hospitalName = await lookups.hospitalName(m.hospital_id);
+        const mapped = backendMatchRequestToFrontend(m, donor, hospitalName);
+        const recipient = await lookups.recipientById(m.recipient_id);
+        if (recipient) {
+          mapped.recipient_name = recipient.name;
+        }
+        items.push(mapped);
+      }
+      return paginatedEnvelope(items, res.total, res.page, res.page_size) as unknown as T;
+    }
+
+    const requestIdMatch = endpoint.match(/^\/match-requests\/([^/]+)(\/.*)?$/);
+    if (requestIdMatch) {
+      const matchId = requestIdMatch[1];
+      const action = requestIdMatch[2];
+      if (!action && method === 'GET') {
+        const m = await rawLiveRequest<BackendMatchRequest>(
+          `/matches/requests/${encodeURIComponent(matchId)}`,
+          'GET'
+        );
+        const donor = await lookups.donorById(m.donor_id);
+        const hospitalName = await lookups.hospitalName(m.hospital_id);
+        const mapped = backendMatchRequestToFrontend(m, donor, hospitalName);
+        const recipient = await lookups.recipientById(m.recipient_id);
+        if (recipient) {
+          mapped.recipient_name = recipient.name;
+        }
+        return mapped as unknown as T;
+      }
+      if (action === '/confirm' && method === 'POST') {
+        // The real backend workflow: POST /matches/requests/{id}/allocate
+        const allocation = await rawLiveRequest<BackendAllocation>(
+          `/matches/requests/${encodeURIComponent(matchId)}/allocate`,
+          'POST',
+          {}
+        );
+        const donor = await lookups.donorById(allocation.donor_id);
+        const hospitalName = await lookups.hospitalName(allocation.hospital_id);
+        const recipient = await lookups.recipientById(allocation.recipient_id);
+        return backendAllocationToFrontend(allocation, donor, recipient?.name, hospitalName) as unknown as T;
+      }
+      if (action === '/reject' && method === 'POST') {
+        // Backend extension: PATCH /matches/requests/{id}/reject
+        const updated = await rawLiveRequest<BackendMatchRequest>(
+          `/matches/requests/${encodeURIComponent(matchId)}/reject`,
+          'PATCH',
+          { reason: body?.reason }
+        );
+        const donor = await lookups.donorById(updated.donor_id);
+        const hospitalName = await lookups.hospitalName(updated.hospital_id);
+        const mapped = backendMatchRequestToFrontend(updated, donor, hospitalName);
+        const recipient = await lookups.recipientById(updated.recipient_id);
+        if (recipient) {
+          mapped.recipient_name = recipient.name;
+        }
+        return mapped as unknown as T;
+      }
+    }
+
+    // ---------------------------- Allocations ----------------------------
+    if (endpoint === '/allocations' && method === 'GET') {
+      const res = await rawLiveRequest<{ items: BackendAllocation[]; total: number; page: number; page_size: number }>(
+        '/allocations',
+        'GET',
+        undefined,
+        {
+          donor_id: params?.donor_id ? String(params.donor_id) : undefined,
+          recipient_id: params?.recipient_id ? String(params.recipient_id) : undefined,
+          page: params?.page,
+          page_size: params?.page_size,
+        }
+      );
+      const items: Allocation[] = [];
+      for (const a of res.items) {
+        const donor = await lookups.donorById(a.donor_id);
+        const hospitalName = await lookups.hospitalName(a.hospital_id);
+        const recipient = await lookups.recipientById(a.recipient_id);
+        items.push(backendAllocationToFrontend(a, donor, recipient?.name, hospitalName));
+      }
+      return paginatedEnvelope(items, res.total, res.page, res.page_size) as unknown as T;
+    }
+
+    // ---------------------------- Dashboard stats ----------------------------
+    if (endpoint === '/stats/dashboard' && method === 'GET') {
+      const raw = await rawLiveRequest<Record<string, any>>('/stats/dashboard', 'GET');
+      const sb = raw.status_breakdown || {};
+      const items = (raw.urgent_recipients || []) as BackendRecipient[];
+      const recipients: Recipient[] = [];
+      for (const r of items) {
+        const hospitalName = await lookups.hospitalName(r.hospital_id);
+        recipients.push(backendRecipientToFrontend(r, hospitalName));
+      }
+      const allocationsRaw = (raw.recent_allocations || []) as BackendAllocation[];
+      const allocations: Allocation[] = [];
+      for (const a of allocationsRaw) {
+        const donor = await lookups.donorById(a.donor_id);
+        const hospitalName = await lookups.hospitalName(a.hospital_id);
+        const recipient = await lookups.recipientById(a.recipient_id);
+        allocations.push(backendAllocationToFrontend(a, donor, recipient?.name, hospitalName));
+      }
+      const stats: DashboardStats = {
+        total_donors: raw.total_donors,
+        available_donors: raw.available_donors,
+        total_recipients_waiting: raw.total_recipients_waiting,
+        confirmed_allocations: raw.confirmed_allocations,
+        donors_approaching_expiry: raw.donors_approaching_expiry,
+        status_breakdown: {
+          available: sb['Available'] ?? 0,
+          reserved: sb['Reserved'] ?? 0,
+          matched: undefined, // live backend has no MATCHED donor status
+          allocated: sb['Allocated'] ?? 0,
+          expired: sb['Expired'] ?? 0,
+        },
+        organ_breakdown: raw.organ_breakdown || {},
+        blood_type_distribution: raw.blood_type_distribution || {},
+        recent_allocations: allocations,
+        urgent_recipients: recipients,
+      };
+      return stats as unknown as T;
+    }
+
+    // ---------------------------- Graph visualization ----------------------------
+    if (endpoint.startsWith('/graph/match/') && method === 'GET') {
+      const matchId = endpoint.replace('/graph/match/', '');
+      const graph = await rawLiveRequest<BackendMatchGraph>(
+        `/graph/matches/${encodeURIComponent(matchId)}`,
+        'GET'
+      );
+      return graph as unknown as T;
+    }
+
+    throw new ApiError(404, 'NOT_FOUND', `No live backend handler for ${method} ${endpoint}`);
+  } catch (err: any) {
+    if (err instanceof ApiError) {
+      handleLiveAuthRejection(endpoint, err);
+      throw err;
+    }
+    const wrapped = new ApiError(
+      err?.status ?? 500,
+      err?.code ?? 'CLIENT_MAPPING_ERROR',
+      err?.message || 'Failed to prepare or process the live API request.'
+    );
+    handleLiveAuthRejection(endpoint, wrapped);
+    throw wrapped;
+  }
 }
 
 /**
@@ -89,62 +671,17 @@ async function request<T>(
   body?: any,
   params?: Record<string, string | number | undefined>
 ): Promise<T> {
-  const token = getStoredToken();
   const useMock = isMockApiEnabled();
 
-  // If live mode is selected, forward to FastAPI backend
+  // Live mode: forward to FastAPI backend (never falls back to mock data).
   if (!useMock) {
-    let url = `${LIVE_BASE_URL}${endpoint}`;
-    if (params) {
-      const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([k, v]) => {
-        if (v !== undefined && v !== '') searchParams.append(k, String(v));
-      });
-      const qs = searchParams.toString();
-      if (qs) url += `?${qs}`;
-    }
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    try {
-      const response = await fetch(url, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-      });
-
-      if (!response.ok) {
-        let errData: any = {};
-        try {
-          errData = await response.json();
-        } catch {
-          errData = { error: { message: response.statusText } };
-        }
-
-        const code = errData?.error?.code || `HTTP_${response.status}`;
-        const message = errData?.error?.message || response.statusText || 'An API error occurred';
-        throw new ApiError(response.status, code, message, errData?.error?.details);
-      }
-
-      if (response.status === 204) {
-        return {} as T;
-      }
-
-      return (await response.json()) as T;
-    } catch (err: any) {
-      if (err instanceof ApiError) throw err;
-      throw new ApiError(500, 'NETWORK_ERROR', err?.message || 'Failed to connect to FastAPI server at ' + LIVE_BASE_URL);
-    }
+    return liveRequest<T>(endpoint, method, body, params);
   }
 
-  // --- MOCK API ENGINE (Matches exact FastAPI Schema) ---
+  // --- MOCK API ENGINE (Matches the frontend view model; isolated from the live contract) ---
   await delay(180);
   const db = loadDatabase();
+  const token = getStoredToken();
 
   // 1. Auth: POST /auth/login
   if (endpoint === '/auth/login' && method === 'POST') {
@@ -191,7 +728,8 @@ async function request<T>(
 
   // Auth gate check
   if (!token && endpoint !== '/auth/login') {
-    // In mock mode allow seamless dev if needed, or enforce token
+    // Mock mode preserves its original permissive demo behavior: no token gate.
+    // (Do NOT change this silently; mock data remains isolated from live RBAC.)
   }
 
   // 2. Stats: GET /stats/dashboard
@@ -304,7 +842,7 @@ async function request<T>(
       if (params?.search) {
         const q = String(params.search).toLowerCase();
         filtered = filtered.filter(
-          (d) => d.name.toLowerCase().includes(q) || d.id.toLowerCase().includes(q) || d.location.toLowerCase().includes(q)
+          (d) => d.name.toLowerCase().includes(q) || d.id.toLowerCase().includes(q) || (d.location || '').toLowerCase().includes(q)
         );
       }
       const page = Number(params?.page) || 1;

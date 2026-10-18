@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api, ApiError } from '../api/client';
+import { api, ApiError, isMockApiEnabled } from '../api/client';
 import { DashboardStats, Recipient } from '../types';
 import { LoadingState } from '../components/LoadingState';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -134,10 +134,18 @@ export const Dashboard: React.FC = () => {
               <span className="text-emerald-400">AVAILABLE</span>
               <span className="font-bold text-white tabular-nums">{stats.status_breakdown.available}</span>
             </div>
-            <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
-              <span className="text-cyan-400">MATCHED (Under Review)</span>
-              <span className="font-bold text-white tabular-nums">{stats.status_breakdown.matched}</span>
-            </div>
+            {stats.status_breakdown.reserved != null && (
+              <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
+                <span className="text-violet-400">RESERVED</span>
+                <span className="font-bold text-white tabular-nums">{stats.status_breakdown.reserved}</span>
+              </div>
+            )}
+            {stats.status_breakdown.matched != null && (
+              <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
+                <span className="text-cyan-400">MATCHED (Under Review)</span>
+                <span className="font-bold text-white tabular-nums">{stats.status_breakdown.matched}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between p-2 bg-slate-950 border border-slate-850 rounded-xs">
               <span className="text-slate-300">ALLOCATED</span>
               <span className="font-bold text-white tabular-nums">{stats.status_breakdown.allocated}</span>
@@ -173,7 +181,9 @@ export const Dashboard: React.FC = () => {
               Critical Urgency Recipients Requiring Matching
             </h2>
             <p className="text-[11px] text-slate-400 font-sans">
-              Patients with urgency score &ge; 80 prioritized by clinical severity.
+              {isMockApiEnabled()
+                ? 'Patients with urgency score ≥ 80 prioritized by clinical severity.'
+                : 'Top waiting-list patients ranked by backend clinical urgency (authoritative 1-10 scale).'}
             </p>
           </div>
           <Link
@@ -205,9 +215,11 @@ export const Dashboard: React.FC = () => {
                   <td className="py-2.5 px-3 font-bold text-white">{r.blood_type}</td>
                   <td className="py-2.5 px-3 text-slate-300">{r.organ_needed}</td>
                   <td className="py-2.5 px-3">
-                    <span className="font-bold text-red-400 tabular-nums">{r.urgency_score} / 100</span>
+                    <span className="font-bold text-red-400 tabular-nums">
+                      {r.urgency_score} / {r.urgency_denominator === 10 ? 10 : 100}
+                    </span>
                   </td>
-                  <td className="py-2.5 px-3 text-slate-300 font-sans">{r.hospital_name}</td>
+                  <td className="py-2.5 px-3 text-slate-300 font-sans">{r.hospital_name || r.id}</td>
                   <td className="py-2.5 px-3 text-right">
                     <Link
                       to={`/matching/${r.id}`}

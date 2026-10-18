@@ -5,8 +5,8 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { UserRole } from '../types';
 
 export const Login: React.FC = () => {
-  const [username, setUsername] = useState('coordinator.jenkins');
-  const [password, setPassword] = useState('transplant#2026');
+  const [username, setUsername] = useState('coordinator_sarah');
+  const [password, setPassword] = useState('CoordPass!2026');
   const [selectedRolePreset, setSelectedRolePreset] = useState<UserRole>('COORDINATOR');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -21,20 +21,20 @@ export const Login: React.FC = () => {
     setSelectedRolePreset(role);
     switch (role) {
       case 'ADMIN':
-        setUsername('admin.director');
-        setPassword('admin#secure2026');
+        setUsername('admin_sys');
+        setPassword('AdminSecurePass!2026');
         break;
       case 'COORDINATOR':
-        setUsername('coordinator.jenkins');
-        setPassword('transplant#2026');
+        setUsername('coordinator_sarah');
+        setPassword('CoordPass!2026');
         break;
       case 'DOCTOR':
-        setUsername('doctor.vance');
-        setPassword('clinical#2026');
+        setUsername('dr_chen_transplant');
+        setPassword('DoctorPass!2026');
         break;
       case 'AUDITOR':
-        setUsername('auditor.compliance');
-        setPassword('audit#2026');
+        setUsername('auditor_james');
+        setPassword('AuditPass!2026');
         break;
     }
   };

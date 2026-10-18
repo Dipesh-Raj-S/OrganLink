@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from neo4j import AsyncDriver
 
@@ -281,4 +282,104 @@ class MatchingRepository:
                 "total": total,
                 "page": page,
                 "page_size": page_size,
+            }
+
+    async def find_candidate_recipients_for_donor(
+        self,
+        donor_id: str,
+    ) -> List[Dict[str, Any]]:
+        """
+        Reverse candidate discovery (Phase 6):
+        Finds Waiting recipients who could receive this donor's organ.
+        Reuses the SAME eligibility model as forward matching:
+        1. Donor exists with status 'Available' and matching organ availability.
+        2. Recipient is Waiting and needs the donor's organ_type.
+        3. Blood compatibility via (db:BloodType {blood_type: donor})-[:CAN_DONATE_TO]->(rb).
+        Returns recipient identifiers with the registered-hospital location used for scoring.
+        """
+        query = """
+        MATCH (d:Donor {donor_id: $donor_id})
+        MATCH (db:BloodType {blood_type: d.blood_type})-[:CAN_DONATE_TO]->(rb:BloodType)
+        MATCH (r:Recipient {status: 'Waiting', organ_needed: d.organ_type})-[:HAS_BLOOD_TYPE]->(rb)
+        WHERE NOT (r)-[:TO_RECIPIENT]-(:Allocation)
+        OPTIONAL MATCH (r)-[:REGISTERED_AT]->(h:Hospital)
+        RETURN DISTINCT r.recipient_id AS recipient_id,
+                        r.name AS name,
+                        r.blood_type AS blood_type,
+                        r.organ_needed AS organ_needed,
+                        r.urgency_score AS urgency_score,
+                        coalesce(h.hospital_id, '') AS hospital_id,
+                        coalesce(h.location.latitude, r.location.latitude) AS location_latitude,
+                        coalesce(h.location.longitude, r.location.longitude) AS location_longitude
+        ORDER BY r.urgency_score DESC, r.recipient_id ASC
+        """
+        async with self.driver.session() as session:
+            res = await session.run(query, donor_id=donor_id)
+            records = await res.data()
+            return [
+                {
+                    "recipient_id": rec["recipient_id"],
+                    "name": rec["name"],
+                    "blood_type": rec["blood_type"],
+                    "organ_needed": rec["organ_needed"],
+                    "urgency_score": rec["urgency_score"],
+                    "hospital_id": rec["hospital_id"],
+                    "location": {
+                        "latitude": rec["location_latitude"],
+                        "longitude": rec["location_longitude"],
+                    },
+                }
+                for rec in records
+            ]
+
+    async def update_match_request_status(
+        self,
+        match_id: str,
+        new_status: str,
+        reject_reason: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Transitions a MatchRequest's status (e.g. Pending -> Rejected).
+        Writes ONLY the MatchRequest node; no allocations are created and no
+        donor/recipient state is modified. Sets rejected_at/reject_reason when
+        the target status is 'Rejected'.
+        """
+        set_clauses = ["m.status = $new_status"]
+        params: Dict[str, Any] = {"match_id": match_id, "new_status": new_status}
+        if new_status == "Rejected":
+            params["rejected_at"] = datetime.now(timezone.utc).isoformat()
+            set_clauses.append("m.rejected_at = datetime($rejected_at)")
+            if reject_reason:
+                params["reject_reason"] = reject_reason
+                set_clauses.append("m.reject_reason = $reject_reason")
+
+        query = f"""
+        MATCH (m:MatchRequest {{match_id: $match_id}})
+        OPTIONAL MATCH (d:Donor)-[:PROPOSED_IN]->(m)
+        OPTIONAL MATCH (m)-[:FOR_RECIPIENT]->(r:Recipient)
+        OPTIONAL MATCH (m)-[:REQUESTED_BY]->(h:Hospital)
+        SET {' , '.join(set_clauses)}
+        RETURN m.match_id AS match_id,
+               m.match_score AS match_score,
+               m.requested_at AS requested_at,
+               m.status AS status,
+               coalesce(d.donor_id, '') AS donor_id,
+               coalesce(r.recipient_id, '') AS recipient_id,
+               coalesce(h.hospital_id, '') AS hospital_id
+        """
+        async with self.driver.session() as session:
+            res = await session.run(query, **params)
+            record = await res.single()
+            if not record:
+                return None
+            req_at = record["requested_at"]
+            iso_req_at = req_at.isoformat() if hasattr(req_at, "isoformat") else str(req_at)
+            return {
+                "match_id": record["match_id"],
+                "match_score": record["match_score"],
+                "requested_at": iso_req_at,
+                "status": record["status"],
+                "donor_id": record["donor_id"],
+                "recipient_id": record["recipient_id"],
+                "hospital_id": record["hospital_id"],
             }

@@ -34,8 +34,9 @@ export const Allocations: React.FC = () => {
   }, []);
 
   // Helper to mask PHI for Auditor role as required by HIPAA/Auditor spec
-  const maskName = (name: string, id: string) => {
-    if (!isAuditor) return name;
+  const maskName = (name: string | undefined, id: string) => {
+    if (!isAuditor) return name || id;
+    if (!name) return `*** [${id}]`;
     const parts = name.split(' ');
     if (parts.length >= 2) {
       return `${parts[0][0]}. ${parts[1][0]}*** [${id.replace('-', '‑***')}]`;
@@ -108,8 +109,12 @@ export const Allocations: React.FC = () => {
                         {isAuditor ? 'ID: [REDACTED]' : `ID: ${a.recipient_id}`}
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-cyan-300 font-semibold">{a.organ_type}</td>
-                    <td className="py-2.5 px-3 font-bold text-white">{a.blood_type}</td>
+                    <td className="py-2.5 px-3 text-cyan-300 font-semibold">
+                      {a.organ_type || <span className="text-slate-600 font-mono">From donor {a.donor_id}</span>}
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-white">
+                      {a.blood_type || <span className="text-slate-600 font-mono">—</span>}
+                    </td>
                     <td className="py-2.5 px-3 text-slate-300 font-sans">
                       <div>{a.confirming_hospital_name}</div>
                       <div className="text-[10px] text-slate-400 font-mono">ID: {a.confirming_hospital_id}</div>

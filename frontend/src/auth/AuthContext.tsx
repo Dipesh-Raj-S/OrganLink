@@ -7,6 +7,7 @@ import {
   api,
   isMockApiEnabled,
   setMockApiEnabled,
+  SESSION_EXPIRED_EVENT,
 } from '../api/client';
 
 interface AuthContextType {
@@ -23,43 +24,143 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function hydrateSessionFromBackend(): Promise<UserSession | null> {
+  try {
+    const token = localStorage.getItem('organ_network_access_token');
+    if (!token) {
+      return null;
+    }
+
+    const me = await api.get<{ user_id: string; username: string; role: UserRole; hospital_id?: string | null }>(
+      '/auth/me'
+    );
+
+    const hospitalId = me.hospital_id || 'UNKNOWN';
+    // The backend HospitalResponse key for the identifier is `hospital_id`
+    // (verified against backend/app/schemas/hospital.py).
+    const hospital = hospitalId !== 'UNKNOWN'
+      ? await api.get<{ hospital_id: string; name: string }>(`/hospitals/${hospitalId}`).catch(() => null)
+      : null;
+
+    return {
+      access_token: token,
+      role: me.role,
+      hospital_id: hospitalId,
+      hospital_name: hospital?.name || hospitalId,
+      username: me.username,
+      expires_in: 3600,
+    };
+  } catch {
+    clearSession();
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMockMode, setIsMockMode] = useState<boolean>(isMockApiEnabled());
 
   useEffect(() => {
-    // Check initial session
-    const stored = getStoredSession();
-    if (stored) {
-      setSession(stored);
-    } else {
-      // Default demo session for immediate exploration
-      const demoSession: UserSession = {
-        access_token: 'demo-init-jwt-token-coord',
-        role: 'COORDINATOR',
-        hospital_id: 'H-001',
-        hospital_name: 'Massachusetts General Hospital',
-        username: 'coordinator.jenkins',
-        expires_in: 3600,
-      };
-      storeSession(demoSession);
-      setSession(demoSession);
-    }
-    setIsLoading(false);
+    const hydrate = async () => {
+      const stored = getStoredSession();
+
+      if (!stored) {
+        setSession(null);
+        setIsLoading(false);
+        return;
+      }
+
+      if (isMockApiEnabled()) {
+        setSession(stored);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const liveSession = await hydrateSessionFromBackend();
+        setSession(liveSession);
+      } catch {
+        setSession(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    hydrate();
 
     const handleModeChange = () => {
       setIsMockMode(isMockApiEnabled());
     };
     window.addEventListener('api-mode-changed', handleModeChange);
-    return () => window.removeEventListener('api-mode-changed', handleModeChange);
+
+    // A live HTTP 401 (expired/invalid bearer token) clears the session and
+    // forces a login redirect through ProtectedRoute.
+    const handleSessionExpired = () => {
+      clearSession();
+      setSession(null);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
+    return () => {
+      window.removeEventListener('api-mode-changed', handleModeChange);
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    };
   }, []);
 
   const login = async (username: string, password: string): Promise<UserSession> => {
-    const res = await api.post<UserSession>('/auth/login', { username, password });
-    storeSession(res);
-    setSession(res);
-    return res;
+    const tokenResponse = await api.post<{ access_token: string; expires_in?: number; token_type?: string }>(
+      '/auth/login',
+      { username, password }
+    );
+
+    localStorage.setItem('organ_network_access_token', tokenResponse.access_token);
+
+    // Mock tokens must never be validated against the live backend.
+    if (isMockApiEnabled()) {
+      const mockSession = getStoredSession();
+      if (mockSession) {
+        storeSession(mockSession);
+        setSession(mockSession);
+        return mockSession;
+      }
+      const fallbackMock: UserSession = {
+        access_token: tokenResponse.access_token,
+        role: 'COORDINATOR',
+        hospital_id: 'UNKNOWN',
+        hospital_name: 'Unknown Hospital',
+        username,
+        expires_in: tokenResponse.expires_in || 3600,
+      };
+      storeSession(fallbackMock);
+      setSession(fallbackMock);
+      return fallbackMock;
+    }
+
+    const nextSession = await hydrateSessionFromBackend();
+    if (!nextSession) {
+      const fallback: UserSession = {
+        access_token: tokenResponse.access_token,
+        role: 'COORDINATOR',
+        hospital_id: 'UNKNOWN',
+        hospital_name: 'Unknown Hospital',
+        username,
+        expires_in: tokenResponse.expires_in || 3600,
+      };
+      storeSession(fallback);
+      setSession(fallback);
+      return fallback;
+    }
+
+    const liveSession: UserSession = {
+      ...nextSession,
+      access_token: tokenResponse.access_token,
+      expires_in: tokenResponse.expires_in || nextSession.expires_in,
+    };
+
+    storeSession(liveSession);
+    setSession(liveSession);
+    return liveSession;
   };
 
   const switchRoleQuickly = (newRole: UserRole) => {
@@ -90,6 +191,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const toggleApiMode = (mock: boolean) => {
     setMockApiEnabled(mock);
     setIsMockMode(mock);
+
+    if (!mock) {
+      clearSession();
+      setSession(null);
+    }
   };
 
   return (
