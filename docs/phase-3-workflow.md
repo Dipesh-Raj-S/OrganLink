@@ -267,7 +267,7 @@ curl -X PATCH http://localhost:8000/api/v1/recipients/REC-001/urgency \
 ```json
 {
   "recipient_id": "REC-001",
-  "name": "Synthetic Recipient Kavita Rao",
+  "name": "Kavita Rao",
   "blood_type": "A-",
   "organ_needed": "Kidney",
   "urgency_score": 10,

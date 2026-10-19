@@ -131,7 +131,7 @@ When candidates achieve identical scores:
 ```json
 {
   "recipient_id": "REC-001",
-  "recipient_name": "Synthetic Recipient Kavita Rao",
+  "recipient_name": "Kavita Rao",
   "organ_needed": "Kidney",
   "recipient_blood_type": "A-",
   "urgency_score": 8,
@@ -139,7 +139,7 @@ When candidates achieve identical scores:
   "items": [
     {
       "donor_id": "DNR-005",
-      "name": "Synthetic Donor Vikram Iyer",
+      "name": "Vikram Iyer",
       "blood_type": "O-",
       "organ_type": "Kidney",
       "donor_location": {
