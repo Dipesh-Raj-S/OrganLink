@@ -202,6 +202,21 @@ export interface BackendReverseCandidateList {
 // Display helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Legacy seed data baked a "Synthetic Donor "/"Synthetic Recipient " prefix
+ * into stored person names. This strips that exact, case-sensitive prefix for
+ * display so every surface (tables, detail views, matching results,
+ * allocations, dashboard, graph labels) renders the person's actual name.
+ * Idempotent: names without the prefix are returned unchanged.
+ * Only ever applied to donor/recipient person names — never hospital names.
+ */
+const SYNTHETIC_PERSON_PREFIX = /^Synthetic (?:Donor|Recipient)\s*/;
+
+export function sanitizePersonName(name: string): string {
+  if (!SYNTHETIC_PERSON_PREFIX.test(name)) return name;
+  return name.replace(SYNTHETIC_PERSON_PREFIX, '').trim();
+}
+
 /** Renders backend coordinates as a readable display string. */
 export function formatGeoLocation(loc: BackendLocation | null | undefined): string {
   if (!loc || typeof loc.latitude !== 'number' || typeof loc.longitude !== 'number') {
@@ -275,7 +290,7 @@ export class LookupProvider {
         page_size: 100,
       });
       res.items.forEach((d) => {
-        this.caches.donors.set(d.donor_id, d);
+        this.caches.donors.set(d.donor_id, { ...d, name: sanitizePersonName(d.name) });
       });
     }
     return this.caches.donors.get(donorId);
@@ -287,7 +302,7 @@ export class LookupProvider {
         page_size: 100,
       });
       res.items.forEach((r) => {
-        this.caches.recipients.set(r.recipient_id, r);
+        this.caches.recipients.set(r.recipient_id, { ...r, name: sanitizePersonName(r.name) });
       });
     }
     return this.caches.recipients.get(recipientId);
@@ -305,7 +320,7 @@ export function backendDonorToFrontend(
   const status = donorStatusToUi(d.status) as Donor['status'];
   return {
     id: d.donor_id,
-    name: d.name,
+    name: sanitizePersonName(d.name),
     blood_type: d.blood_type as BloodType,
     organ_type: d.organ_type as Donor['organ_type'],
     location: formatGeoLocation(d.location),
@@ -411,7 +426,7 @@ export function backendRecipientToFrontend(
 ): Recipient {
   return {
     id: r.recipient_id,
-    name: r.name,
+    name: sanitizePersonName(r.name),
     blood_type: r.blood_type as BloodType,
     organ_needed: r.organ_needed as Recipient['organ_needed'],
     urgency_score: r.urgency_score,
@@ -571,7 +586,7 @@ export function frontendHospitalToBackendUpdate(
 export function backendCandidateToFrontend(c: BackendCandidateDonor): MatchCandidate {
   return {
     donor_id: c.donor_id,
-    donor_name: c.name,
+    donor_name: sanitizePersonName(c.name),
     blood_type: c.blood_type as BloodType,
     organ_type: c.organ_type as MatchCandidate['organ_type'],
     distance_km: c.explanation.factors.distance_km,
@@ -607,7 +622,7 @@ export function backendReverseCandidatesToFrontend(
 ): ReverseCandidateView[] {
   return list.items.map((r) => ({
     recipient_id: r.recipient_id,
-    recipient_name: r.name,
+    recipient_name: sanitizePersonName(r.name),
     blood_type: r.blood_type,
     urgency_score: r.urgency_score,
     distance_km: r.distance_km,
@@ -632,7 +647,7 @@ export function backendMatchRequestToFrontend(
     donor_id: m.donor_id,
     recipient_id: m.recipient_id,
     requesting_hospital_id: m.hospital_id,
-    donor_name: donor?.name,
+    donor_name: donor ? sanitizePersonName(donor.name) : undefined,
     donor_blood_type: donor?.blood_type as BloodType | undefined,
     donor_organ: donor?.organ_type as MatchRequest['donor_organ'],
     recipient_name: undefined,
@@ -682,9 +697,9 @@ export function backendAllocationToFrontend(
     id: a.allocation_id,
     match_request_id: a.match_id,
     donor_id: a.donor_id,
-    donor_name: donor?.name,
+    donor_name: donor ? sanitizePersonName(donor.name) : undefined,
     recipient_id: a.recipient_id,
-    recipient_name: recipientName,
+    recipient_name: recipientName !== undefined ? sanitizePersonName(recipientName) : undefined,
     confirming_hospital_id: a.hospital_id,
     confirming_hospital_name: hospitalName,
     organ_type: donor?.organ_type as Allocation['organ_type'],

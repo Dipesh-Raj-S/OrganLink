@@ -197,7 +197,7 @@ def build_donors() -> List[Dict[str, Any]]:
 
         donors.append({
             "donor_id": f"DNR-{i:03d}",
-            "name": f"Synthetic Donor {name}",
+            "name": name,
             "blood_type": blood,
             "organ_type": organ,
             "latitude": round(lat, 4),
@@ -231,7 +231,7 @@ def build_recipients() -> List[Dict[str, Any]]:
 
         recipients.append({
             "recipient_id": f"REC-{i:03d}",
-            "name": f"Synthetic Recipient {name}",
+            "name": name,
             "blood_type": blood,
             "organ_needed": organ,
             "urgency_score": urgency,

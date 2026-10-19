@@ -43,6 +43,7 @@ import {
   frontendMatchRequestToBackendCreate,
   frontendRecipientToBackendCreate,
   frontendRecipientToBackendUpdate,
+  sanitizePersonName,
   uiDonorStatusToBackend,
   uiMatchRequestStatusToBackend,
   uiRecipientStatusToBackend,
@@ -332,7 +333,7 @@ async function liveRequest<T>(
         const hospitalName = await lookups.hospitalName(item.hospital_id as string);
         items.push({
           recipient_id: item.recipient_id,
-          recipient_name: item.name,
+          recipient_name: sanitizePersonName(item.name),
           blood_type: item.blood_type,
           urgency_score: item.urgency_score,
           hospital_id: item.hospital_id,
@@ -642,6 +643,13 @@ async function liveRequest<T>(
       const graph = await rawLiveRequest<BackendMatchGraph>(
         `/graph/matches/${encodeURIComponent(matchId)}`,
         'GET'
+      );
+      // Node labels for Donor/Recipient nodes are person names; strip legacy
+      // synthetic prefixes so the canvas/detail panel shows the actual name.
+      graph.nodes = graph.nodes.map((n) =>
+        n.type === 'DONOR' || n.type === 'RECIPIENT'
+          ? { ...n, label: sanitizePersonName(String(n.label)) }
+          : n
       );
       return graph as unknown as T;
     }
