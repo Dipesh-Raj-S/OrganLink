@@ -651,6 +651,20 @@ async function liveRequest<T>(
           ? { ...n, label: sanitizePersonName(String(n.label)) }
           : n
       );
+      // Normalize node types to match frontend canvas expectations.
+      // The live backend may return types with varying casing or whitespace;
+      // ensure they map to the canonical frontend type constants.
+      const typeMap: Record<string, string> = {
+        DONOR: 'DONOR',
+        RECIPIENT: 'RECIPIENT',
+        HOSPITAL: 'HOSPITAL',
+        MATCH_REQUEST: 'MATCH_REQUEST',
+        ALLOCATION: 'ALLOCATION',
+      };
+      graph.nodes = graph.nodes.map((n) => ({
+        ...n,
+        type: typeMap[n.type.toUpperCase().trim()] || n.type,
+      }));
       return graph as unknown as T;
     }
 

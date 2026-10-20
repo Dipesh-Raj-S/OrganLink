@@ -24,8 +24,8 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
     return 'Workstation';
   };
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    switchRoleQuickly(e.target.value as UserRole);
+  const handleRoleChange = () => {
+    // Role switching removed; user cannot change authenticated permissions from UI.
   };
 
   return (
@@ -89,21 +89,10 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
         </div>
 
         <div className="flex items-center gap-1.5 border border-slate-300 rounded-md px-2 py-1 bg-white">
-          <label htmlFor="navbar-role" className="text-[11px] text-slate-400">
-            Role
-          </label>
-          <select
-            id="navbar-role"
-            value={role || 'COORDINATOR'}
-            onChange={handleRoleChange}
-            className="bg-transparent text-xs font-medium text-brand-ink focus:outline-none cursor-pointer"
-          >
-            <option value="COORDINATOR" className="bg-white text-slate-800">COORDINATOR</option>
-            <option value="DOCTOR" className="bg-white text-slate-800">DOCTOR</option>
-            <option value="ADMIN" className="bg-white text-slate-800">ADMIN</option>
-            <option value="AUDITOR" className="bg-white text-slate-800">AUDITOR</option>
-          </select>
-        </div>
+              <span className="text-[11px] text-slate-600 font-medium">
+                {role || 'COORDINATOR'}
+              </span>
+            </div>
 
         <button
           type="button"
